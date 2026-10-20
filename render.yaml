@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: smarttownship-iot
+    runtime: node
+    plan: free
+    buildCommand: node scripts/build-api.mjs
+    startCommand: node dist/apps/api/server.mjs
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 22.18.0
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DEVICE_HMAC_SECRET
+        sync: false
+      - key: DEVICE_ID
+        sync: false

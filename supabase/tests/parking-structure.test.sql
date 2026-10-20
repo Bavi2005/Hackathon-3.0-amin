@@ -1,0 +1,50 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(26);
+insert into auth.users(id) values ('06000000-0000-4000-8000-000000000001'),('06000000-0000-4000-8000-000000000002');
+insert into public.tenants(id,name,demo) values ('16000000-0000-4000-8000-000000000001','Parking fictional tenant',true),('16000000-0000-4000-8000-000000000002','Other parking tenant',true);
+insert into public.sites(id,tenant_id,name) values ('26000000-0000-4000-8000-000000000001','16000000-0000-4000-8000-000000000001','Parking site'),('26000000-0000-4000-8000-000000000002','16000000-0000-4000-8000-000000000002','Other parking site');
+insert into public.memberships(tenant_id,site_id,user_id,role,capabilities) values
+ ('16000000-0000-4000-8000-000000000001','26000000-0000-4000-8000-000000000001','06000000-0000-4000-8000-000000000001','STAFF',array['parking.configure','parking.simulate','parking.update.manual']),
+ ('16000000-0000-4000-8000-000000000002','26000000-0000-4000-8000-000000000002','06000000-0000-4000-8000-000000000002','STAFF',array['parking.configure','parking.simulate','parking.update.manual']);
+insert into public.parking_zones(id,tenant_id,site_id,name,capacity) values
+ ('36000000-0000-4000-8000-000000000001','16000000-0000-4000-8000-000000000001','26000000-0000-4000-8000-000000000001','Bay zone',1),
+ ('36000000-0000-4000-8000-000000000002','16000000-0000-4000-8000-000000000001','26000000-0000-4000-8000-000000000001','Counter zone',10);
+update private.runtime_settings set environment='test',simulations_enabled=true;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','06000000-0000-4000-8000-000000000002',true);
+select throws_ok($$select public.get_parking_overview('26000000-0000-4000-8000-000000000001')$$,'42501','Forbidden','foreign overview denied');
+select throws_ok($$select public.set_parking_override('36000000-0000-4000-8000-000000000002',1,60,'verified_count')$$,'42501','Forbidden','foreign manual override denied');
+select set_config('request.jwt.claim.sub','06000000-0000-4000-8000-000000000001',true);
+select lives_ok($$select public.create_parking_structure('26000000-0000-4000-8000-000000000001','46000000-0000-4000-8000-000000000001','facility',null,'Fictional Mall','Height 2.1 m (fictional)')$$,'facility created');
+select throws_ok($$select public.create_parking_structure('26000000-0000-4000-8000-000000000001',gen_random_uuid(),'level',gen_random_uuid(),'Level','')$$,'22023','Invalid parking hierarchy','foreign or missing parent rejected');
+select lives_ok($$select public.create_parking_structure('26000000-0000-4000-8000-000000000001','46000000-0000-4000-8000-000000000002','level','46000000-0000-4000-8000-000000000001','Level 1','')$$,'level created');
+select lives_ok($$select public.configure_parking_zone('36000000-0000-4000-8000-000000000001','46000000-0000-4000-8000-000000000002','bay',1)$$,'empty zone can use bay sensors');
+select lives_ok($$select public.create_parking_bay('36000000-0000-4000-8000-000000000001','56000000-0000-4000-8000-000000000001','A1',true)$$,'bay created');
+select throws_ok($$select public.create_parking_bay('36000000-0000-4000-8000-000000000001',gen_random_uuid(),'A2',false)$$,'22023','Bay count cannot exceed zone capacity','bay capacity enforced');
+select throws_ok($$select public.create_parking_bay('36000000-0000-4000-8000-000000000002',gen_random_uuid(),'Fake',false)$$,'22023','Invalid bay or observation type','counter cannot invent bay precision');
+select throws_ok($$select public.configure_parking_zone('36000000-0000-4000-8000-000000000001','46000000-0000-4000-8000-000000000002','counter',2)$$,'22023','Observation type cannot change after devices, bays or observations exist','source locked after bay setup');
+select lives_ok($$select public.create_bay_device('56000000-0000-4000-8000-000000000001','66000000-0000-4000-8000-000000000001')$$,'bay device registered');
+select throws_ok($$select public.simulate_parking_bay('66000000-0000-4000-8000-000000000001','FREE')$$,'P0001','Device unavailable','new device starts suspended');
+select public.save_parking_device('26000000-0000-4000-8000-000000000001','66000000-0000-4000-8000-000000000001',1,'36000000-0000-4000-8000-000000000001',true);
+select lives_ok($$select public.simulate_parking_bay('66000000-0000-4000-8000-000000000001','FREE')$$,'simulated free observation persisted');
+select is((select status from public.parking_bays where id='56000000-0000-4000-8000-000000000001'),'FREE','bay status persisted');
+select throws_ok($$select public.simulate_parking('66000000-0000-4000-8000-000000000001',0)$$,'22023','Device observation type mismatch','bay device cannot supply counter values');
+select throws_ok($$select public.ingest_parking_bay('66000000-0000-4000-8000-000000000001',gen_random_uuid(),1,'OCCUPIED',now())$$,'42501',null,'browser cannot bypass signed ingestion');
+set local role service_role;
+select throws_ok($$select public.ingest_parking_bay('66000000-0000-4000-8000-000000000001',gen_random_uuid(),0,'OCCUPIED',now())$$,'P0001','Invalid or replayed bay event','bay sequence replay rejected');
+select throws_ok($$select public.ingest_parking_bay('66000000-0000-4000-8000-000000000001',gen_random_uuid(),1,'OCCUPIED',now()-interval '3 minutes')$$,'P0001','Invalid or replayed bay event','stale bay event rejected');
+select throws_ok($$select public.ingest_parking_bay('66000000-0000-4000-8000-000000000001',gen_random_uuid(),1,'AVAILABLE',now())$$,'P0001','Invalid or replayed bay event','unknown bay status rejected');
+select lives_ok($$select public.ingest_parking_bay('66000000-0000-4000-8000-000000000001',gen_random_uuid(),1,'OCCUPIED',now())$$,'signed bridge service can change bay');
+set local role authenticated;
+select is((select status from public.parking_bays where id='56000000-0000-4000-8000-000000000001'),'OCCUPIED','real source replaces simulated bay state');
+select throws_ok($$select public.set_parking_override('36000000-0000-4000-8000-000000000001',0,60,'verified_count')$$,'22023','Invalid manual override','aggregate manual count cannot overwrite individual bay states');
+select throws_ok($$select public.set_parking_override('36000000-0000-4000-8000-000000000002',11,60,'verified_count')$$,'22023','Invalid manual override','manual count bounded by capacity');
+select lives_ok($$select public.set_parking_override('36000000-0000-4000-8000-000000000002',3,60,'verified_count')$$,'authorized manual count saved');
+reset role;
+select ok(exists(select 1 from public.audit_events where action='parking.manual.override' and metadata->>'reason'='verified_count'),'manual override audited');
+update private.parking_overrides set expires_at=now()-interval '1 second';
+set local role authenticated;
+select ok(not exists(select 1 from jsonb_array_elements(public.get_parking_overview('26000000-0000-4000-8000-000000000001')->'zones') z where z->'override'<>'null'::jsonb),'expired override omitted from overview');
+select * from finish();
+rollback;

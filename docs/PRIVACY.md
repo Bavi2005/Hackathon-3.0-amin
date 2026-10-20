@@ -1,0 +1,11 @@
+# Privacy
+
+Fictional data only until a responsible privacy lead and pilot stakeholders approve collection and notices. No national ID, phone, vehicle plate, biometric or document collection. The visitor name is visible to its invitation owner and expressly authorized site guards/managers. OTP/SMS is unavailable; QR is not identity verification.
+
+Prototype schedule: GPS details/latest coordinates 24h, IoT event IDs 7d, visitor names anonymized after 30d, metadata audit 90d. Supabase Cron performs cleanup hourly. No claim this schedule satisfies Malaysian PDPA: lawful basis, notices, processor contracts, international transfers, legal holds and data subject workflows need qualified review.
+
+Data requests currently go to the authorized site administrator outside the application; verify identity and site authority before correction/export/deletion. There is no unrestricted export endpoint. Backup copies require a separately approved expiration process. Do not capture real credentials or visitor information in screenshots/logs. QR links are bearer secrets: share privately and close/reload the guest page after use.
+
+Migration 006 supplies a restricted masked operational export for explicitly granted site readers/exporters, with purpose and access audit. It is not a complete data-subject-access response or proof of anonymization. Search text is not copied to audit metadata. Exports contain references, masked names, lifecycle status and timestamps; no full names, tokens, owner IDs or phone numbers. Downloads are outside the server retention job and need an approved handling/deletion policy before real use. Hosted validation and privacy review remain pending.
+
+Migration 007 adds optional, explicitly configured fictional form answers: purpose, party size, planned arrival date, organization and safety acknowledgement. Templates keep collection bounded; phone, plate, identity-document and arbitrary fields remain unavailable. Answers are not added to the general visitor list or CSV export. The owner and expressly authorized site readers can request them through an audited endpoint. Notice acknowledgement is timestamped, answers are cleared after 30 days and historical schemas remain versioned. This is a prototype retention policy, not legal approval to collect real information.

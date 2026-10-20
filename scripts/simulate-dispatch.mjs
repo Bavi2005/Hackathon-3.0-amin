@@ -1,0 +1,10 @@
+import {mkdir,writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {fictionalScenario,simulateDispatch} from '../packages/contracts/dispatch-simulation.ts';
+const seed=process.argv[2]===undefined?20261020:Number(process.argv[2]);
+if(!Number.isSafeInteger(seed)||seed<0||seed>4294967295)throw Error('Seed must be an unsigned 32-bit integer');
+const scenario=fictionalScenario(seed),inputHash=createHash('sha256').update(JSON.stringify(scenario)).digest('hex');
+const fixed=simulateDispatch(scenario,'fixed'),adaptive=simulateDispatch(scenario,'adaptive');
+const output={version:1,simulated:true,source:'Executed deterministic fictional travel matrix; no real routing or vehicle connection',inputHash,scenario,fixed,adaptive};
+await mkdir('.local',{recursive:true});await writeFile('.local/dispatch-experiment.json',JSON.stringify(output,null,2)+'\n');
+console.log(JSON.stringify({seed,inputHash,fixed:fixed.metrics,adaptive:adaptive.metrics,artifact:'.local/dispatch-experiment.json'},null,2));

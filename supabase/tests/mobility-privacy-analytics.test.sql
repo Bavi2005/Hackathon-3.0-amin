@@ -1,0 +1,87 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(40);
+insert into auth.users(id) values ('07000000-0000-4000-8000-000000000001'),('07000000-0000-4000-8000-000000000002'),('07000000-0000-4000-8000-000000000003'),('07000000-0000-4000-8000-000000000004'),('07000000-0000-4000-8000-000000000005');
+insert into public.tenants(id,name,demo) values ('17000000-0000-4000-8000-000000000001','Operations fictional',true),('17000000-0000-4000-8000-000000000002','Other operations',true);
+insert into public.sites(id,tenant_id,name) values ('27000000-0000-4000-8000-000000000001','17000000-0000-4000-8000-000000000001','Operations site'),('27000000-0000-4000-8000-000000000002','17000000-0000-4000-8000-000000000002','Other operations site');
+insert into public.memberships(tenant_id,site_id,user_id,role,capabilities) values
+ ('17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','07000000-0000-4000-8000-000000000001','RESIDENT',array['rides.request','visits.invite']),
+ ('17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','07000000-0000-4000-8000-000000000002','SITE_MANAGER',array['fleet.configure','fleet.dispatch','privacy.review','privacy.hold','analytics.read']),
+ ('17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','07000000-0000-4000-8000-000000000003','DRIVER',array['fleet.drive']),
+ ('17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','07000000-0000-4000-8000-000000000004','DRIVER',array['fleet.drive']),
+ ('17000000-0000-4000-8000-000000000002','27000000-0000-4000-8000-000000000002','07000000-0000-4000-8000-000000000005','SITE_MANAGER',array['fleet.configure','fleet.dispatch','privacy.review','privacy.hold','analytics.read']);
+insert into public.stops(tenant_id,site_id,name) values ('17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','Hub'),('17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','Mall');
+insert into public.vehicles(id,tenant_id,site_id,name,capacity,accessible,driver_id,shift_active) values
+ ('37000000-0000-4000-8000-000000000001','17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','Accessible',1,true,'07000000-0000-4000-8000-000000000003',true),
+ ('37000000-0000-4000-8000-000000000002','17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','Standard',1,false,'07000000-0000-4000-8000-000000000004',true);
+insert into public.invitations(id,tenant_id,site_id,owner_id,token_hash,expires_at,redeemed_at) values ('47000000-0000-4000-8000-000000000001','17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','07000000-0000-4000-8000-000000000001',repeat('d',64),now()+interval '1 day',now());
+insert into public.visits(id,tenant_id,site_id,invitation_id,owner_id,guest_name,status,entered_at,exited_at) values ('57000000-0000-4000-8000-000000000001','17000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','47000000-0000-4000-8000-000000000001','07000000-0000-4000-8000-000000000001','Fictional private name','departed',now(),now());
+update private.runtime_settings set environment='test',simulations_enabled=true;
+create function pg_temp.report(s uuid default '27000000-0000-4000-8000-000000000001') returns jsonb language sql as $$select public.get_site_analytics(s,now()-interval '1 day',now()+interval '1 day')$$;
+create function pg_temp.route(stops text[] default array['Hub','Mall']) returns uuid language sql as $$select public.save_transport_route('27000000-0000-4000-8000-000000000001','67000000-0000-4000-8000-000000000001',0,'Fictional route',stops,480,1080,20,true)$$;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000001',true);
+select throws_ok($$select pg_temp.report()$$,'42501','Forbidden','resident aggregate report denied');
+select throws_ok($$select pg_temp.route()$$,'42501','Forbidden','resident cannot publish timetable');
+select public.request_ride('77000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','Hub','Mall',false);
+select public.request_ride('77000000-0000-4000-8000-000000000002','27000000-0000-4000-8000-000000000001','Hub','Mall',false);
+select public.request_ride('77000000-0000-4000-8000-000000000003','27000000-0000-4000-8000-000000000001','Hub','Mall',true);
+select throws_ok($$select public.request_ride('77000000-0000-4000-8000-000000000001','27000000-0000-4000-8000-000000000001','Mall','Hub',false)$$,'22023','Ride request conflict','same booking key cannot change journey');
+select throws_ok($$select public.get_dispatch_recommendations('77000000-0000-4000-8000-000000000001')$$,'42501','Forbidden','resident cannot see dispatcher alternatives');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000005',true);
+select throws_ok($$select pg_temp.report()$$,'42501','Forbidden','foreign analytics denied');
+select throws_ok($$select public.get_dispatch_recommendations('77000000-0000-4000-8000-000000000001')$$,'42501','Forbidden','foreign recommendations denied');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000002',true);
+select throws_ok($$select pg_temp.route(array['Hub','Foreign'])$$,'22023','Invalid route or timetable','route stops scoped');
+select lives_ok($$select pg_temp.route()$$,'authorized route published');
+select lives_ok($$select pg_temp.route()$$,'route create retry idempotent');
+select is(jsonb_array_length(public.get_dispatch_recommendations('77000000-0000-4000-8000-000000000003')->'candidates'),1,'accessibility filters candidate set');
+select is(public.get_dispatch_recommendations('77000000-0000-4000-8000-000000000003')->'candidates'->0->'eta_minutes','null'::jsonb,'no fabricated routing ETA');
+select public.assign_ride('77000000-0000-4000-8000-000000000001','37000000-0000-4000-8000-000000000001');
+select public.assign_ride('77000000-0000-4000-8000-000000000002','37000000-0000-4000-8000-000000000002');
+select throws_ok($$select public.reassign_ride('77000000-0000-4000-8000-000000000001','37000000-0000-4000-8000-000000000002','vehicle_offline')$$,'P0001','Vehicle full','reassignment cannot overbook');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000001',true);
+select public.ride_transition('77000000-0000-4000-8000-000000000002','cancelled');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.reassign_ride('77000000-0000-4000-8000-000000000001','37000000-0000-4000-8000-000000000002','vehicle_offline')$$,'compatible replacement assigned');
+select lives_ok($$select public.reassign_ride('77000000-0000-4000-8000-000000000001','37000000-0000-4000-8000-000000000002','vehicle_offline')$$,'reassignment retry idempotent');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000004',true);
+select public.ride_transition('77000000-0000-4000-8000-000000000001','boarded');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000002',true);
+select throws_ok($$select public.reassign_ride('77000000-0000-4000-8000-000000000001','37000000-0000-4000-8000-000000000001','operational_change')$$,'22023','Incompatible reassignment','boarded ride cannot silently switch vehicles');
+select is((pg_temp.report()->'transport'->>'requests')::int,3,'report counts persisted requests');
+select is((pg_temp.report()->'transport'->>'wait_sample_size')::int,1,'wait sample uses actual boarding timestamp');
+select is((pg_temp.report()->'visitors'->>'registrations')::int,1,'report counts persisted visitor cohort');
+select ok(pg_temp.report()::text not like '%Fictional private name%','aggregate report excludes visitor name');
+select throws_ok($$select public.get_site_analytics('27000000-0000-4000-8000-000000000001',now()-interval '32 days',now())$$,'22023','Choose an ordered date range of at most 31 days','report window bounded');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000005',true);
+select throws_ok($$select public.request_visit_privacy(gen_random_uuid(),'57000000-0000-4000-8000-000000000001','access')$$,'42501','Forbidden','foreign subject request denied');
+select throws_ok($$select public.set_visitor_hold('57000000-0000-4000-8000-000000000001',30,'incident_review',true)$$,'42501','Forbidden','foreign hold denied');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000001',true);
+select lives_ok($$select public.request_visit_privacy('87000000-0000-4000-8000-000000000001','57000000-0000-4000-8000-000000000001','erasure')$$,'owner submits request');
+select lives_ok($$select public.request_visit_privacy('87000000-0000-4000-8000-000000000001','57000000-0000-4000-8000-000000000001','erasure')$$,'request retry idempotent');
+select throws_ok($$select public.fulfill_privacy_request('87000000-0000-4000-8000-000000000001',true)$$,'42501','Forbidden','requester cannot self-fulfill');
+select throws_ok($$select public.review_privacy_request('87000000-0000-4000-8000-000000000001',true,'verified_authority',true)$$,'42501','Independent authorized reviewer required','requester cannot self-approve');
+select set_config('request.jwt.claim.sub','07000000-0000-4000-8000-000000000002',true);
+select throws_ok($$select public.fulfill_privacy_request('87000000-0000-4000-8000-000000000001',true)$$,'22023','Approved request and explicit confirmation required','unreviewed request cannot execute');
+select throws_ok($$select public.review_privacy_request('87000000-0000-4000-8000-000000000001',true,'verified_authority',false)$$,'22023','Verified identity, authority and decision reason required','identity check required');
+select lives_ok($$select public.review_privacy_request('87000000-0000-4000-8000-000000000001',true,'verified_authority',true)$$,'independent approval recorded');
+select lives_ok($$select public.set_visitor_hold('57000000-0000-4000-8000-000000000001',30,'incident_review',true)$$,'authorized hold set');
+select throws_ok($$select public.fulfill_privacy_request('87000000-0000-4000-8000-000000000001',true)$$,'22023','Record is on site or under active hold; changes blocked','hold blocks erasure');
+reset role;
+update public.visits set created_at=now()-interval '31 days' where id='57000000-0000-4000-8000-000000000001';
+select private.retain();
+select is((select guest_name from public.visits where id='57000000-0000-4000-8000-000000000001'),'Fictional private name','scheduled retention honors hold');
+set local role authenticated;
+select public.set_visitor_hold('57000000-0000-4000-8000-000000000001',0,'incident_review',true);
+select lives_ok($$select public.fulfill_privacy_request('87000000-0000-4000-8000-000000000001',true)$$,'approved minimization succeeds after hold release');
+select lives_ok($$select public.fulfill_privacy_request('87000000-0000-4000-8000-000000000001',true)$$,'minimization retry idempotent');
+select throws_ok($$select * from private.visitor_privacy_requests$$,'42501',null,'privacy records not directly readable');
+reset role;
+select is((select guest_name from public.visits where id='57000000-0000-4000-8000-000000000001'),'[erased on request]','visitor name actually minimized');
+select is((select count(*)::int from private.dispatch_decisions where ride_id='77000000-0000-4000-8000-000000000001'),2,'assignment and reassignment decisions persisted without duplicate retries');
+select ok(exists(select 1 from public.audit_events where action='privacy.fulfilled.erasure'),'fulfilled privacy action audited');
+select ok((select bool_and(relrowsecurity) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relname in ('visitor_privacy_requests','visitor_legal_holds','dispatch_decisions')),'sensitive operational tables enforce RLS');
+select is((select count(*)::int from public.transport_routes where site_id='27000000-0000-4000-8000-000000000001'),1,'route retry creates one row');
+select * from finish();
+rollback;

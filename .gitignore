@@ -1,0 +1,15 @@
+node_modules/
+.npm-cache/
+.local/
+dist/
+.env*
+!.env.example
+!.env.api.example
+!.env.test.example
+.supabase/
+supabase/.temp/
+test-results/
+/Laundrov2/
+playwright-report/
+*.pem
+*.key

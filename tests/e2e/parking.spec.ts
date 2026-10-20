@@ -1,0 +1,42 @@
+import {test,expect} from '@playwright/test';
+import {contractFixture,id} from './contract-fixture';
+test('UI contract: parking hierarchy and bays use persisted RPC acknowledgements',async({page},testInfo)=>{
+ const f=await contractFixture(page,'parking');f.state.zones[0].capacity=1;await f.login();await page.getByRole('navigation').getByRole('button',{name:'Parking',exact:true}).click();
+ const panel=page.getByRole('region',{name:'Parking availability'});
+ await panel.getByLabel('Facility name',{exact:true}).fill('Fictional Mall');await panel.getByRole('button',{name:'Create facility',exact:true}).click();
+ await panel.getByRole('combobox',{name:'Facility',exact:true}).selectOption({label:'Fictional Mall'});await panel.getByLabel('Level name',{exact:true}).fill('Level 1');
+ await panel.getByRole('button',{name:'Create level',exact:true}).click();
+ await panel.getByRole('combobox',{name:'Zone to configure',exact:true}).selectOption(id(60));
+ await panel.getByRole('combobox',{name:'Parking level',exact:true}).selectOption({label:'Fictional Mall / Level 1'});
+ await panel.getByRole('combobox',{name:'Observation source',exact:true}).selectOption('bay');await panel.getByRole('button',{name:'Configure zone hierarchy',exact:true}).click();
+ await panel.getByRole('combobox',{name:'Bay zone',exact:true}).selectOption(id(60));await panel.getByLabel('Bay label',{exact:true}).fill('A1');await panel.getByLabel('Accessible bay',{exact:true}).check();
+ await panel.getByRole('button',{name:'Create bay',exact:true}).click();await expect(panel.getByRole('heading',{name:'A1 · Accessible',exact:true})).toBeVisible();
+ await panel.getByRole('combobox',{name:'Device bay',exact:true}).selectOption({label:'Fictional contract zone / A1'});
+ await panel.getByRole('button',{name:'Register bay device',exact:true}).click();await expect(panel.getByRole('status')).toContainText('registered suspended');
+ expect(f.state.parkingDevices[0].active).toBe(false);
+ await page.setViewportSize({width:360,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+ await page.screenshot({path:testInfo.outputPath('parking-360.png'),fullPage:true});
+});
+test('UI contract: bay simulation shows source and stale free bay becomes unknown',async({page})=>{
+ const f=await contractFixture(page,'parking');f.state.zones[0].kind='bay';f.state.zones[0].capacity=1;
+ f.state.bays.push({id:id(510),zone_id:id(60),label:'B1',accessible:false,status:'UNKNOWN',observed_at:null,simulated:false});
+ f.state.parkingDevices.push({id:id(511),zone_id:id(60),bay_id:id(510),active:true,last_sequence:-1});
+ await f.login();await page.getByRole('navigation').getByRole('button',{name:'Parking',exact:true}).click();
+ const panel=page.getByRole('region',{name:'Parking availability'});
+ await panel.getByRole('combobox',{name:'Simulated bay status',exact:true}).selectOption('FREE');
+ await panel.getByRole('button',{name:'Simulate bay B1',exact:true}).click();await expect(panel.getByText('1 free',{exact:true})).toBeVisible();
+ await expect(panel.getByText('FREE · SIMULATED',{exact:true})).toBeVisible();
+ expect(f.calls.find(c=>c.name==='simulate_parking_bay')?.args).toEqual({p_device:id(511),p_status:'FREE'});
+ await page.clock.install();await page.clock.fastForward(125000);await expect(panel.getByText('Unknown',{exact:true})).toBeVisible();
+ await expect(panel.getByText('UNKNOWN · SIMULATED',{exact:true})).toBeVisible();
+});
+test('UI contract: manual count errors do not invent availability and successful counts expire',async({page})=>{
+ const f=await contractFixture(page,'parking');f.state.reject.set('set_parking_override','Forbidden');await f.login();await page.getByRole('navigation').getByRole('button',{name:'Parking',exact:true}).click();
+ const panel=page.getByRole('region',{name:'Parking availability'});
+ await panel.getByLabel('Manually observed occupied count',{exact:true}).fill('7');
+ await panel.getByRole('combobox',{name:'Override duration',exact:true}).selectOption('60');
+ await panel.getByRole('button',{name:'Save manual count',exact:true}).click();await expect(panel.getByRole('alert')).toHaveText('Forbidden');await expect(panel.getByText('Unknown',{exact:true})).toBeVisible();
+ f.state.reject.delete('set_parking_override');await panel.getByRole('button',{name:'Save manual count',exact:true}).click();await expect(panel.getByText('33 free',{exact:true})).toBeVisible();
+ await expect(panel.getByText('MANUAL OVERRIDE',{exact:true})).toBeVisible();
+ await page.clock.install();await page.clock.fastForward(61000);await expect(panel.getByText('Unknown',{exact:true})).toBeVisible();
+});

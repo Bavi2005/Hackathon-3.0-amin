@@ -1,8 +1,8 @@
 # SmartTownship
 
-Visitor registration, transport operations and parking share Supabase identity and tenant/site authorization. **Prototype: hosted verification and release gates remain open.** The user confirmed on 2026-10-20 that a development Supabase project is not configured yet.
+Visitor registration, transport operations and parking share Supabase identity and tenant/site authorization. **Prototype: release gates remain open.** On 2026-10-20 a dedicated hosted Supabase development project was connected, all 16 SQL migrations applied, and database health verified. Demo seeding, live service/browser tests and Render frontend deployment remain pending.
 
-Start with the Windows [setup guide](docs/SETUP_HOSTED.md). SmartTownship uses **http://127.0.0.1:5174**, strict port. Leave **5173 and 5000** for AppointHub. Core workflows need hosted Supabase; the optional device bridge uses 3001 and is not required for the demo.
+For the new Render Static Site, use [render-static.yaml](render-static.yaml) and [Render setup](docs/RENDER_DEPLOY.md); the existing [render.yaml](render.yaml) is optional IoT only. Continue with the Windows [setup guide](docs/SETUP_HOSTED.md) for hosted tests and fictional account provisioning. SmartTownship uses **http://127.0.0.1:5174**, strict port. Leave **5173 and 5000** for AppointHub. Core workflows need hosted Supabase; the optional device bridge uses 3001 and is not required for the demo.
 
 ## Local checks
 
@@ -31,7 +31,7 @@ npm run test:e2e
 npm run dev
 ```
 
-Run each command only after the previous one succeeds. There are **16 migration files and 300 authored pgTAP assertions**, none executed here. Migration ledger hashes prevent silently editing applied history. Seed is additive and creates fictional accounts; repeated seeds create more tenants, so do not rerun it casually. No reset is supplied. Browser tests own 5174; stop your SmartTownship dev server before running them.
+Run each command only after the previous one succeeds. The **16 migration files were applied to the dedicated hosted development database on 2026-10-20**; the **300 authored pgTAP assertions are still unverified**. The migration script will recognize already-applied files. Migration ledger hashes prevent silently editing applied history. Seed is additive and creates fictional accounts; repeated seeds create more tenants, so do not rerun it casually. No reset is supplied. Browser tests own 5174; stop your SmartTownship dev server before running them.
 
 ## Source scope
 

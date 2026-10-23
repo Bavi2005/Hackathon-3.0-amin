@@ -13,9 +13,9 @@ const roles:Record<Role,[string,string[]]>={
  dispatcher:['STAFF',['fleet.dispatch']],manager:['SITE_MANAGER',['visits.read.site','exports.visits','visits.forms.manage','staff.manage','staff.invite','fleet.configure','privacy.review','privacy.hold','analytics.read','visits.checkin','fleet.dispatch','parking.configure','parking.update.manual','parking.simulate','audit.read']],
  admin:['TOWNSHIP_ADMIN',['sites.manage','visits.read.site','exports.visits','visits.forms.manage','staff.manage','staff.invite','fleet.configure','privacy.review','privacy.hold','analytics.read','visits.checkin','fleet.dispatch','parking.configure','parking.update.manual','parking.simulate','audit.read']],operator:['PLATFORM_OPERATOR',['audit.read']]
 };
-export async function contractFixture(page:Page,role:Role){
+export async function contractFixture(page:Page,role:Role,identity?:{user:string;email:string}){
  const calls:{name:string;args:Record<string,unknown>}[]=[];
- const user=id(10),site=id(20),tenant=id(30),vehicle=id(40),device=id(50);
+ const user=identity?.user??id(10),site=id(20),tenant=id(30),vehicle=id(40),device=id(50);
  const state={
   rides:[] as Row[],visits:[] as Row[],records:[] as VisitorRecord[],
   activeForm:null as VisitorFormVersion|null,formHistory:[] as VisitorFormVersion[],invitationForm:null as VisitorFormVersion|null,
@@ -36,7 +36,7 @@ export async function contractFixture(page:Page,role:Role){
  };
  const now=()=>new Date().toISOString();
  const [roleName,capabilities]=roles[role];
- const account={id:user,aud:'authenticated',role:'authenticated',email:'fictional-contract@example.test',app_metadata:{provider:'email'},user_metadata:{},created_at:now(),factors:state.mfaFactors};
+ const account={id:user,aud:'authenticated',role:'authenticated',email:identity?.email??'fictional-contract@example.test',app_metadata:{provider:'email'},user_metadata:{},created_at:now(),factors:state.mfaFactors};
  const jwt=[{alg:'HS256',typ:'JWT'},{sub:user,role:'authenticated',aud:'authenticated',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+3600}].map(value=>Buffer.from(JSON.stringify(value)).toString('base64url')).join('.')+'.'+Buffer.from('not-a-real-signature').toString('base64url');
  await page.routeWebSocket('wss://supabase-contract.example.test/**',socket=>socket.close());
  await page.route('https://supabase-contract.example.test/**',async route=>{

@@ -1,15 +1,15 @@
 import {test,expect} from '@playwright/test';
 import {contractFixture,id} from './contract-fixture';
 test('UI contract: displayed site QR starts separate private registration',async({page})=>{
- const f=await contractFixture(page,'manager');await f.login();await page.getByRole('navigation').getByRole('button',{name:'Forms',exact:true}).click();const panel=page.getByRole('region',{name:'Public site check-in QR'});
- await panel.getByRole('button',{name:'Issue or rotate site QR',exact:true}).click();await expect(panel.getByRole('img',{name:'Displayed site check-in QR',exact:true})).toHaveAttribute('src',/^data:image\/png/);
- await panel.getByRole('link',{name:'Open public site check-in',exact:true}).click();await page.getByRole('button',{name:'Start visitor registration',exact:true}).click();
+ const f=await contractFixture(page,'manager');await f.login();await page.getByRole('navigation').getByRole('button',{name:'MyVisitor',exact:true}).click();const panel=page.getByRole('region',{name:'Public site check-in QR'});
+ await panel.getByRole('button',{name:'Generate walk-in QR code',exact:true}).click();await expect(panel.getByRole('img',{name:'Scan this site-specific QR to start your own visitor registration',exact:true})).toHaveAttribute('src',/^data:image\/png/);
+ await panel.getByRole('link',{name:'Test walk-in registration ↗',exact:true}).click();await page.getByRole('button',{name:'Start visitor registration',exact:true}).click();
  await expect(page.getByLabel('Guest name',{exact:true})).toBeVisible();expect(f.calls.find(c=>c.name==='begin_site_checkin')?.args.p_token).toBe('d'.repeat(64));
  await page.getByLabel('Guest name',{exact:true}).fill('Fictional public QR guest');await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Register visit',exact:true}).click();await expect(page.getByRole('status')).toContainText('Registration recorded');
 });
 test('UI contract: revoked site QR cannot open a private registration',async({page})=>{
- const f=await contractFixture(page,'manager');await f.login();await page.getByRole('navigation').getByRole('button',{name:'Forms',exact:true}).click();const panel=page.getByRole('region',{name:'Public site check-in QR'});
- await panel.getByRole('button',{name:'Issue or rotate site QR',exact:true}).click();await panel.getByRole('button',{name:'Revoke site QR',exact:true}).click();
+ const f=await contractFixture(page,'manager');await f.login();await page.getByRole('navigation').getByRole('button',{name:'MyVisitor',exact:true}).click();const panel=page.getByRole('region',{name:'Public site check-in QR'});
+ await panel.getByRole('button',{name:'Generate walk-in QR code',exact:true}).click();await panel.getByRole('button',{name:'Revoke public QR',exact:true}).click();
  await expect(panel.getByRole('status')).toContainText('Site check-in link revoked.');
  await page.goto('/#checkin='+ 'd'.repeat(64));await page.getByRole('button',{name:'Start visitor registration',exact:true}).click();await expect(page.getByRole('alert')).toHaveText('Site check-in unavailable');await expect(page.getByLabel('Guest name',{exact:true})).toHaveCount(0);
 });

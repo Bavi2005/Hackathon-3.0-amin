@@ -1,10 +1,12 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import type {SupabaseClient} from '@supabase/supabase-js';
 type Overview = {tenants: {id: string; name: string; demo: boolean; sites: number; active_memberships: number}[]; simulation_enabled: boolean; integrations: Record<string, string>; audit: {action: string; record_id: string; created_at: string}[]};
+type Activity = {visitors:number;onsite:number;rides:number;ride_requests:number;shuttles:number;routes:number;parking_zones:number;parking_capacity:number;fresh_parking_zones:number;activity:{action:string;created_at:string}[]};
 export function PlatformAdministration({db}: {db: SupabaseClient}) {
+  const [pulse, setPulse] = useState<Activity | null>(null);
   const [data, setData] = useState<Overview | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
   const lifetime = useRef(new AbortController()), request = useRef(crypto.randomUUID());
-  const load = useCallback(async() => {const {data, error} = await db.rpc('get_platform_overview').abortSignal(AbortSignal.any([lifetime.current.signal, AbortSignal.timeout(15000)])); if (lifetime.current.signal.aborted) return; if (error) throw Error(error.message); setData(data);}, [db]);
+  const load = useCallback(async() => {const signal=AbortSignal.any([lifetime.current.signal,AbortSignal.timeout(15000)]);const [overview,activity]=await Promise.all([db.rpc('get_platform_overview').abortSignal(signal),db.rpc('get_platform_activity').abortSignal(signal)]);if(lifetime.current.signal.aborted)return;if(overview.error)throw Error(overview.error.message);setData(overview.data);if(activity.error){setPulse(null);}else setPulse(activity.data as Activity);}, [db]);
   useEffect(() => {const controller = new AbortController(); lifetime.current = controller; void load().catch(e => {if (!controller.signal.aborted) setError(e.message);}); return () => controller.abort();}, [load]);
   async function create(form: FormData) {
     if (busy) return; setBusy(true); setError(''); setMessage('');
@@ -17,7 +19,15 @@ export function PlatformAdministration({db}: {db: SupabaseClient}) {
   return <section aria-label="Platform administration"><p>This separately granted platform view contains tenant configuration and counts. It gives no default access to private visitor records or GPS. Do not enter real organization or account information in this prototype.</p>
     {error && <p role="alert" className="error">{error}</p>}{message && <p role="status" className="success">{message}</p>}
     <button className="secondary" disabled={busy} onClick={() => void load().catch(e => setError(e.message))}>Refresh platform</button>
-    {data && <><div className="cards" aria-label="Platform pulse">
+    {data && <><div className="platform-welcome"><span className="eyebrow">SMARTTOWNSHIP / CONTROL CENTRE</span><h2>One community. Every service. One clear view.</h2><p>Fictional, permission-checked operations across the demo townships. Figures come from actual stored application records—not painted-on statistics.</p><span className="platform-demo-chip">● SIMULATED OPERATIONS · {data.simulation_enabled?'DEVELOPMENT ENABLED':'SIMULATOR DISABLED'}</span></div>
+    {pulse && <><div className="platform-signal-grid">
+      <article><span className="eyebrow">REGISTERED ARRIVALS</span><strong>{pulse.visitors}</strong><p>{pulse.onsite} guests on site</p><span className="platform-signal-icon">↗</span></article>
+      <article><span className="eyebrow">SHUTTLE JOURNEYS</span><strong>{pulse.rides}</strong><p>{pulse.ride_requests} awaiting dispatch</p><span className="platform-signal-icon">➜</span></article>
+      <article><span className="eyebrow">COMMUNITY FLEET</span><strong>{pulse.shuttles}</strong><p>{pulse.routes} published routes</p><span className="platform-signal-icon">◇</span></article>
+      <article><span className="eyebrow">PARKING NETWORK</span><strong>{pulse.parking_zones}</strong><p>{pulse.fresh_parking_zones} counter zones reporting recently</p><span className="platform-signal-icon">P</span></article>
+    </div>
+    <section className="platform-feed"><div><span className="eyebrow">OPERATIONAL MOMENTUM</span><h3>Recent system activity</h3><p>Recent audited actions only. No private visitor names or driver coordinates.</p></div><div>{pulse.activity.length?pulse.activity.map((event,i)=><div className="platform-feed-row" key={i}><span className="feed-dot"/><span>{event.action.replaceAll('.',' · ')}</span><small>{new Date(event.created_at).toLocaleString('en-MY',{timeZone:'Asia/Kuala_Lumpur',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</small></div>):<p>No recent auditable actions. New administrative changes appear here.</p>}</div></section></>}
+    <div className="cards" aria-label="Platform pulse">
       <article><span className="eyebrow">TOWNSHIPS</span><strong className="count">{data.tenants.length}</strong><p>Organizations in the platform</p></article>
       <article><span className="eyebrow">MANAGED SITES</span><strong className="count">{data.tenants.reduce((n,t)=>n+t.sites,0)}</strong><p>Configured community locations</p></article>
       <article><span className="eyebrow">ACTIVE MEMBERSHIPS</span><strong className="count">{data.tenants.reduce((n,t)=>n+t.active_memberships,0)}</strong><p>Accounts assigned to sites</p></article>

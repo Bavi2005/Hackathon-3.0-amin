@@ -1,7 +1,7 @@
 import {Icon} from './Icon';
 
 type Row=Record<string,string|number|boolean|null>;
-type Route={id:string;name:string;stop_names:string[];start_minute:number;end_minute:number;headway_minutes:number;published:boolean};
+export type Route={id:string;name:string;stop_names:string[];start_minute:number;end_minute:number;headway_minutes:number;published:boolean};
 const clock=(value:number)=>String(Math.floor(value/60)).padStart(2,'0')+':'+String(value%60).padStart(2,'0');
 export function MobilityNetwork({routes,vehicles,rides}:{routes:Route[];vehicles:Row[];rides:Row[]}){
  const published=routes.filter(r=>r.published);

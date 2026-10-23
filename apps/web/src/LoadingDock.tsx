@@ -6,7 +6,7 @@ type Session={id:string;facility_id:string;level_id:string;vehicle_ref:string;de
 type Dashboard={sessions:Session[];active:number;today:number;departed:number;server_time:string};
 type ExportRow={id:string;vehicle_ref:string;delivery_ref:string;facility:string;level:string;status:string;checked_in_at:string;checked_out_at:string|null};
 function csv(rows:ExportRow[]):string{
- const value=(raw:unknown)=>{let cell=String(raw??'');if (/^[\s]*[=+@\-]/.test(cell))cell="'"+cell;return '"'+cell.replaceAll('"','""')+'"';};
+ const value=(raw:unknown)=>{let cell=String(raw??'');if (/^[\s]*[=+@-]/.test(cell))cell="'"+cell;return '"'+cell.replaceAll('"','""')+'"';};
  return ['Reference,Vehicle,Delivery,Mall,Level,Status,Arrival (UTC),Departure (UTC)',
  ...rows.map(r=>[r.id,r.vehicle_ref,r.delivery_ref,r.facility,r.level,r.status,r.checked_in_at,r.checked_out_at].map(value).join(','))].join('\r\n');
 }

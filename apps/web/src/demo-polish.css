@@ -108,3 +108,12 @@
   #visitor-qr-print .qr-display-actions{display:none!important}
 }
 @media(prefers-reduced-motion:reduce){.service-card,.parking-capacity-bar>span{transition:none!important}}
+
+/* Prevent decorative scenes and responsive grid contents from creating page-level horizontal scroll. */
+html,body,#root{max-width:100%;}
+.layout{width:100%;max-width:100%;overflow-x:clip}
+.content,.content main,.home-hero,.services-section,.home-lower,.activity-panel,.today-panel,.parking-zones-grid,.parking-zone-card,.platform-feed{min-width:0;max-width:100%}
+.home-lower>*{min-width:0}
+.activity-row,.activity-row>span:nth-child(2),.service-description,.header-location,.header-location>div{min-width:0}
+.activity-row strong,.header-location strong{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){.content{width:100%;margin-left:0}.content main{width:100%;padding-left:clamp(12px,5vw,19px);padding-right:clamp(12px,5vw,19px)}.service-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.service-card{overflow-wrap:anywhere}.home-hero{width:100%}.hero-copy{min-width:0}.app-header{max-width:100%}}

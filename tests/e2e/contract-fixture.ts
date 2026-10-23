@@ -4,11 +4,11 @@ import type {VisitorRecord} from '../../packages/contracts/visitor-records';
 import type {VisitorFormVersion, VisitorField, VisitorTemplate, VisitFormResponse} from '../../packages/contracts/visitor-forms';
 import type {SiteAdministrationData} from '../../packages/contracts/administration';
 import type {ParkingOverview,ParkingBay,ParkingZone} from '../../packages/contracts/parking-overview';
-export type Role='resident'|'driver'|'guard'|'parking'|'dispatcher'|'manager'|'admin'|'operator';
+export type Role='resident'|'driver'|'guard'|'parking'|'dispatcher'|'manager'|'admin'|'operator'|'loader';
 type Row=Record<string,string|number|boolean|null>;
 export const id=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const roles:Record<Role,[string,string[]]>={
- resident:['RESIDENT',['visits.invite','rides.request']],driver:['DRIVER',['fleet.drive']],
+ loader:['LOADER',['loading.manage']],resident:['RESIDENT',['visits.invite','rides.request']],driver:['DRIVER',['fleet.drive']],
  guard:['STAFF',['visits.read.site','visits.checkin','visits.assist']],parking:['STAFF',['parking.configure','parking.update.manual','parking.simulate']],
  dispatcher:['STAFF',['fleet.dispatch']],manager:['SITE_MANAGER',['visits.read.site','exports.visits','visits.forms.manage','staff.manage','staff.invite','fleet.configure','privacy.review','privacy.hold','analytics.read','visits.checkin','fleet.dispatch','parking.configure','parking.update.manual','parking.simulate','audit.read']],
  admin:['TOWNSHIP_ADMIN',['sites.manage','visits.read.site','exports.visits','visits.forms.manage','staff.manage','staff.invite','fleet.configure','privacy.review','privacy.hold','analytics.read','visits.checkin','fleet.dispatch','parking.configure','parking.update.manual','parking.simulate','audit.read']],operator:['PLATFORM_OPERATOR',['audit.read']]
@@ -22,6 +22,7 @@ export async function contractFixture(page:Page,role:Role){
   formResponses:new Map<string,VisitFormResponse>(),
   vehicles:[{id:vehicle,tenant_id:tenant,site_id:site,name:'Fictional contract shuttle',capacity:2,accessible:true,driver_id:user,shift_active:false,lat:null,lng:null,accuracy:null,observed_at:null,simulated:false}] as Row[],
   zones:[{id:id(60),tenant_id:tenant,site_id:site,name:'Fictional contract zone',capacity:40,occupied:null,observed_at:null,simulated:false}] as Row[],
+  loadingSessions:[] as {id:string;facility_id:string;level_id:string;vehicle_ref:string;delivery_ref:string;status:'loading'|'departed';checked_in_at:string;checked_out_at:string|null;facility_name:string;level_name:string}[],
   redeemed:false,failLogin:false,otpEnabled:false,otpVerified:false,otpAttempts:5,
   administration:{members:[],invitations:[],vehicles:[],zones:[],devices:[],stops:[]} as SiteAdministrationData,
   facilities:[] as ParkingOverview['facilities'],levels:[] as ParkingOverview['levels'],bays:[] as (ParkingBay&{zone_id:string})[],
@@ -68,6 +69,18 @@ export async function contractFixture(page:Page,role:Role){
    switch(name){
     case 'get_visitor_confirmation':return state.redeemed?send({reference:id(71),status:state.visits[0]?.status??'pending_entry',site_name:'Fictional contract site',expires_at:new Date(Date.now()+3600000).toISOString()}):send({code:'P0001',message:'Confirmation unavailable'},400);
     case 'get_platform_overview':return send({tenants:state.platformTenants,audit:[],simulation_enabled:true,integrations:{sms:'Simulator only',routing:'Unavailable',iot:'Signed adapter'}});
+    case 'get_platform_activity':return send({visitors:0,onsite:0,visitors_today:0,rides:0,ride_requests:0,shuttles:1,routes:0,parking_zones:1,parking_capacity:40,fresh_parking_zones:0,known_free_parking:0,parking_facilities:state.facilities.length,loading_total:state.loadingSessions.length,loading_active:state.loadingSessions.filter(s=>s.status==='loading').length,loading_completed:state.loadingSessions.filter(s=>s.status==='departed').length,locations:[],activity:[]});
+    case 'get_loading_dashboard':if(!['loader','manager','admin'].includes(role))return send({code:'42501',message:'Forbidden'},403);return send({sessions:state.loadingSessions,active:state.loadingSessions.filter(s=>s.status==='loading').length,today:state.loadingSessions.length,departed:state.loadingSessions.filter(s=>s.status==='departed').length,server_time:now()});
+    case 'start_loading_session':{
+      if(!['loader','manager','admin'].includes(role))return send({code:'42501',message:'Forbidden'},403);
+      const level=state.levels.find(l=>l.id===args.p_level && l.facility_id===args.p_facility);
+      if(!level)return send({code:'22023',message:'Choose a valid mall and level'},400);
+      const facility=state.facilities.find(f=>f.id===level.facility_id)!;
+      state.loadingSessions.push({id:String(args.p_request),facility_id:facility.id,level_id:level.id,vehicle_ref:String(args.p_vehicle),delivery_ref:String(args.p_delivery),status:'loading',checked_in_at:now(),checked_out_at:null,facility_name:facility.name,level_name:level.name});return send(args.p_request);
+    }
+    case 'finish_loading_session':{const row=state.loadingSessions.find(x=>x.id===args.p_id)!;row.status='departed';row.checked_out_at=now();return send(null);}
+    case 'export_loading_records':if(!['manager','admin'].includes(role))return send({code:'42501',message:'Forbidden'},403);return send({count:state.loadingSessions.length,records:state.loadingSessions.map(x=>({id:x.id,vehicle_ref:x.vehicle_ref,delivery_ref:x.delivery_ref,facility:x.facility_name,level:x.level_name,status:x.status,checked_in_at:x.checked_in_at,checked_out_at:x.checked_out_at}))});
+
     case 'create_platform_tenant':state.platformTenants.push({id:String(args.p_id),name:String(args.p_name),demo:true,sites:1,active_memberships:1});return send(args.p_id);
     case 'create_township_site':return send(args.p_id);
     case 'create_site_checkin_link':state.siteQrRevoked=false;return send({id:id(950),token:'d'.repeat(64),expires_at:new Date(Date.now()+86400000).toISOString()});
@@ -83,7 +96,7 @@ export async function contractFixture(page:Page,role:Role){
     case 'get_dispatch_recommendations':return send({candidates:state.vehicles.filter(v=>v.shift_active).map(v=>({id:v.id,name:v.name,capacity:v.capacity,occupied:0,spare:v.capacity,accessible:v.accessible,eta_minutes:null,quality:'ETA unavailable; routing provider not configured',reason:'Compatible active vehicle; ranked by spare capacity'})),generated_at:now(),quality:'Capacity-only recommendation; no route ETA available'});
     case 'reassign_ride':{const r=state.rides.find(r=>r.id===args.p_ride)!;r.vehicle_id=String(args.p_vehicle);return send(null);}
     case 'clear_parking_override':state.overrides.delete(String(args.p_zone));return send(null);
-    case 'get_parking_overview':return send({zones:state.zones.map(z=>({...z,kind:z.kind??'counter',revision:1,level_id:null,facility_name:null,level_name:null,override:state.overrides.get(String(z.id))??null,bays:state.bays.filter(b=>b.zone_id===z.id)})),devices:capabilities.includes('parking.configure')?[{id:device,zone_id:id(60),bay_id:null,active:true,last_sequence:0},...state.parkingDevices]:[],facilities:state.facilities,levels:state.levels});
+    case 'get_parking_overview':return send({zones:state.zones.map(z=>({...z,kind:z.kind??'counter',revision:1,level_id:z.level_id??null,facility_name:state.facilities.find(f=>state.levels.some(l=>l.id===z.level_id && l.facility_id===f.id))?.name??null,level_name:state.levels.find(l=>l.id===z.level_id)?.name??null,override:state.overrides.get(String(z.id))??null,bays:state.bays.filter(b=>b.zone_id===z.id)})),devices:capabilities.includes('parking.configure')?[{id:device,zone_id:id(60),bay_id:null,active:true,last_sequence:0},...state.parkingDevices]:[],facilities:state.facilities,levels:state.levels});
     case 'set_parking_override':state.overrides.set(String(args.p_zone),{occupied:Number(args.p_occupied),observed_at:now(),expires_at:new Date(Date.now()+Number(args.p_seconds)*1000).toISOString(),reason:String(args.p_reason)});return send(null);
     case 'create_parking_structure':if(args.p_type==='facility')state.facilities.push({id:String(args.p_id),name:String(args.p_name),details:String(args.p_details)});else state.levels.push({id:String(args.p_id),facility_id:String(args.p_parent),name:String(args.p_name)});return send(args.p_id);
     case 'configure_parking_zone':state.zones.find(z=>z.id===args.p_zone)!.kind=String(args.p_kind);return send(null);

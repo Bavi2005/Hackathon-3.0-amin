@@ -4,7 +4,7 @@ import {collectVisitorAnswers, parseVisitorFields, type VisitorInvitation} from 
 import {VisitorFields} from './VisitorFields';
 import {VisitorOtp} from './VisitorOtp';
 
-export function GuestRegistration({db, token}: {db: SupabaseClient; token: string}) {
+export function GuestRegistration({db, token, intent = 'visitor'}: {db: SupabaseClient; token: string; intent?: 'visitor' | 'loading'}) {
   const [invitation, setInvitation] = useState<VisitorInvitation | null>(null), [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState(''), [reference, setReference] = useState('');
   const pending = useRef<AbortController | null>(null);
@@ -48,8 +48,8 @@ export function GuestRegistration({db, token}: {db: SupabaseClient; token: strin
     } catch (failure) { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'Registration failed. Retry when connected.'); }
     finally { if (!controller.signal.aborted) setBusy(false); }
   }
-  return <main className="setup"><span className="eyebrow">MYVISITOR / GUEST REGISTRATION</span><h1>You're invited.</h1>
-    <p>Use fictional details only in this prototype. An invitation does not prove identity; security staff verify entry separately.</p>
+  return <main className="setup"><span className="eyebrow">MYVISITOR / GUEST REGISTRATION</span><h1>{intent==='loading'?'Delivery & loading registration':"You're invited."}</h1>
+    <p>Use fictional details only in this prototype. An invitation does not prove identity; security staff verify entry separately.</p>{intent==='loading'&&<p className="delivery-guest-note">Goods delivery: choose <strong>Delivery</strong> as your purpose, submit the form, then show the confirmation reference at the loading desk. Staff check in your vehicle separately; this QR does not reserve a bay.</p>}
     {loading && <p role="status">Loading your invitation…</p>}
     {error && <p role="alert" className="error">{error}</p>}
     {!loading && !invitation && !confirmation && <button onClick={() => setRetry(value => value + 1)}>Retry invitation</button>}
@@ -59,7 +59,7 @@ export function GuestRegistration({db, token}: {db: SupabaseClient; token: strin
       {reference && <><p role="status" className="success">Registration recorded. Please see the guard for verification.</p><p>Registration reference: {reference}</p></>}
       <form onSubmit={event => void submit(event)}><fieldset disabled={busy || !!reference}>
         <legend>Visitor details</legend><label>Guest name<input name="name" required maxLength={80} autoComplete="off"/></label>
-        <VisitorFields fields={invitation.form?.fields ?? []}/>
+        <VisitorFields fields={invitation.form?.fields ?? []} defaultPurpose={intent==='loading'?'Delivery':undefined}/>
         {invitation.otp_provider === 'simulator' && <VisitorOtp db={db} token={token} initial={invitation.otp} onChange={setOtpReady}/>}
         {invitation.otp_provider === 'unavailable' && <p>Optional phone verification is unavailable. The guard checks entry separately.</p>}
         <label className="check"><input type="checkbox" name="consent" required/>I acknowledge the demo notice: fictional name and answers are retained for 30 days, then anonymized or cleared. No real personal data.</label>

@@ -23,7 +23,7 @@ jobs:
       - run: npm run test:runtime
       - run: npm run build
       - run: npm run smoke:api
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       - run: npm run test:e2e:setup
       - run: npm run test:e2e:contract
       - run: npm audit --audit-level=high

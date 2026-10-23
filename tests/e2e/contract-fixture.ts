@@ -13,7 +13,7 @@ const roles:Record<Role,[string,string[]]>={
  dispatcher:['STAFF',['fleet.dispatch']],manager:['SITE_MANAGER',['visits.read.site','exports.visits','visits.forms.manage','staff.manage','staff.invite','fleet.configure','privacy.review','privacy.hold','analytics.read','visits.checkin','fleet.dispatch','parking.configure','parking.update.manual','parking.simulate','audit.read']],
  admin:['TOWNSHIP_ADMIN',['sites.manage','visits.read.site','exports.visits','visits.forms.manage','staff.manage','staff.invite','fleet.configure','privacy.review','privacy.hold','analytics.read','visits.checkin','fleet.dispatch','parking.configure','parking.update.manual','parking.simulate','audit.read']],operator:['PLATFORM_OPERATOR',['audit.read']]
 };
-export async function contractFixture(page:Page,role:Role,identity?:{user:string;email:string}){
+export async function contractFixture(page:Page,role:Role,identity?:{user:string;email:string},options?:{platformGranted?:boolean}){
  const calls:{name:string;args:Record<string,unknown>}[]=[];
  const user=identity?.user??id(10),site=id(20),tenant=id(30),vehicle=id(40),device=id(50);
  const state={
@@ -69,7 +69,7 @@ export async function contractFixture(page:Page,role:Role,identity?:{user:string
    switch(name){
     case 'get_visitor_confirmation':return state.redeemed?send({reference:id(71),status:state.visits[0]?.status??'pending_entry',site_name:'Fictional contract site',expires_at:new Date(Date.now()+3600000).toISOString()}):send({code:'P0001',message:'Confirmation unavailable'},400);
     case 'get_platform_overview':return send({tenants:state.platformTenants,audit:[],simulation_enabled:true,integrations:{sms:'Simulator only',routing:'Unavailable',iot:'Signed adapter'}});
-    case 'get_platform_activity':return send({visitors:0,onsite:0,visitors_today:0,rides:0,ride_requests:0,shuttles:1,routes:0,parking_zones:1,parking_capacity:40,fresh_parking_zones:0,known_free_parking:0,parking_facilities:state.facilities.length,loading_total:state.loadingSessions.length,loading_active:state.loadingSessions.filter(s=>s.status==='loading').length,loading_completed:state.loadingSessions.filter(s=>s.status==='departed').length,locations:[],activity:[]});
+    case 'get_platform_activity':return send({visitors:16,onsite:3,visitors_today:6,pending_entry:2,rides:22,ride_requests:4,shuttles:4,routes:3,parking_zones:5,parking_capacity:180,fresh_parking_zones:1,known_free_parking:34,parking_facilities:2,loading_total:7,loading_active:2,loading_completed:5,generated_at:now(),locations:[{site_id:site,site_name:'Demo Elmina Community Hub',township_name:'Fictional Elmina Township',visitors:16,onsite:3,pending:2,loading_total:7,loading_active:2,facilities:2,counter_zones:1,zones_reporting:1,known_free:34,rides_waiting:4,staff_accounts:9}],facilities:[{facility_id:id(120),facility_name:'Fictional Test Mall',site_name:'Demo Elmina Community Hub',township_name:'Fictional Elmina Township',levels:2,zones:4,fresh_counters:1,counter_capacity:180,known_free:34,individually_free_bays:3,individually_tracked_bays:10}],daily_trends:Array.from({length:7},(_,i)=>({date:new Date(Date.now()-(6-i)*86400000).toISOString().slice(0,10),visitors:i+1,loading:i%3,rides:i+2})),activity:[{action:'loading.arrived',created_at:now()}]});
     case 'get_loading_dashboard':if(!['loader','manager','admin'].includes(role))return send({code:'42501',message:'Forbidden'},403);return send({sessions:state.loadingSessions,active:state.loadingSessions.filter(s=>s.status==='loading').length,today:state.loadingSessions.length,departed:state.loadingSessions.filter(s=>s.status==='departed').length,server_time:now()});
     case 'start_loading_session':{
       if(!['loader','manager','admin'].includes(role))return send({code:'42501',message:'Forbidden'},403);
@@ -162,7 +162,7 @@ export async function contractFixture(page:Page,role:Role,identity?:{user:string
    sites:[{id:site,name:'Fictional contract site'}],stops:[{id:id(81),name:'Community Hub'},{id:id(82),name:'Demo Mall'}],
    visits:state.visits,rides:state.rides,vehicles:state.vehicles,parking_zones:state.zones,
    transport_routes:state.routes,
-   platform_admins:role==='operator'?[{user_id:user,active:true}]:[],
+   platform_admins:role==='operator'&&options?.platformGranted!==false?[{user_id:user,active:true}]:[],
    iot_devices:capabilities.includes('parking.configure')?[{id:device,zone_id:id(60)}]:[]
    ,audit_events:capabilities.includes('audit.read')?[{id:id(95),action:'fixture.audit.event',created_at:now(),record_id:id(71),actor:user}]:[]
   };

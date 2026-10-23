@@ -47,7 +47,7 @@ export function SiteCheckinIssuer({db, site}: {db: SupabaseClient; site: string}
     {link && <div className="qr-display" id="visitor-qr-print">
       <div className="qr-print-sheet"><span className="eyebrow">SMARTTOWNSHIP · MYVISITOR</span><h3>Welcome! Check in here.</h3><img src={qr} alt="Scan this site-specific QR to start your own visitor registration" width="280" height="280"/><p>Scan with your camera to complete the visitor form.</p><strong>NO APP REQUIRED</strong><small>Fictional demo environment · Entry still requires guard verification</small></div>
       <div className="qr-display-actions"><h3>Display this at the entrance</h3><p>The public QR can be scanned by multiple arriving guests. Each starts a separate private, time-limited registration. Rotating the QR invalidates the previous displayed link, not registrations already started.</p>
-        <a href={link} target="_blank" rel="noreferrer">Test walk-in registration ↗</a>
+        <a href={link}>Test walk-in registration ↗</a>
         <div className="qr-actions"><button type="button" className="secondary" onClick={() => void copyLink()}>Copy visitor link</button><button type="button" className="secondary" onClick={() => window.print()}>Print QR poster</button></div>
         <button type="button" className="secondary" disabled={busy} onClick={() => void change(true)}>Revoke public QR</button>
       </div>

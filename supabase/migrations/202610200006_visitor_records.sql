@@ -88,5 +88,5 @@ begin
    'reason',p_reason,'from',p_from,'until',p_until,'status',p_status,'count',jsonb_array_length(records)));
  return jsonb_build_object('records',records,'count',jsonb_array_length(records),'generated_at',now());
 end$$;
-revoke all on function public.export_visitor_records(uuid,timestamptz,timestamptz,text,text) from public,anon,authenticated;
-grant execute on function public.export_visitor_records(uuid,timestamptz,timestamptz,text,text) to authenticated;
+revoke all on function public.export_visitor_records(uuid,timestamptz,timestamptz,text,text,text) from public,anon,authenticated;
+grant execute on function public.export_visitor_records(uuid,timestamptz,timestamptz,text,text,text) to authenticated;

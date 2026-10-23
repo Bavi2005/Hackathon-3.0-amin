@@ -1,0 +1,38 @@
+# SmartTownship frontend only. Import this file as a Render Blueprint.
+# The optional device bridge remains in render.yaml and is NOT deployed by this Blueprint.
+# VITE_ variables are public browser configuration. Never add a Supabase secret/service-role key here.
+services:
+  - type: web
+    name: smarttownship-web
+    runtime: static
+    repo: https://github.com/Bavi2005/Hackathon-3.0-amin
+    branch: main
+    buildCommand: npm ci && npm run build:web
+    staticPublishPath: ./apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=(self)
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000
+    envVars:
+      - key: NODE_VERSION
+        value: "22.18.0"
+      - key: VITE_SUPABASE_URL
+        value: https://cvoxmzlpvdtezxsoyyfc.supabase.co
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_pxZxAcaGUMBFg_ddmn0h1g_L-bF-3aD

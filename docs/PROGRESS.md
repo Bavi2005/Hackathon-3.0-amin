@@ -8,7 +8,7 @@ Final serial verify:local run at 2026-10-22T15:46:28.597Z: 84 unit, 36 runtime, 
 
 The pitch command prepares fictional visitors, trips, a timetable and parking through authenticated RPCs, with project/demo checks and an exclusive per-site receipt. Its missing-config guard was exercised; no hosted scenario was run or claimed. No schema/security relaxation, provider connection, deployment, real data collection or AppointHub change occurred. Browser work stayed on strict 5174.
 
-Next: configure dedicated Supabase using SETUP_HOSTED.md, execute all 16 migrations/300 authored SQL assertions and real service/browser tests, then run and rehearse demo:pitch. Full gaps and pitch instructions are in REDESIGN_AND_PITCH_REPORT.md. This is a locally tested prototype, not a fully completed product.
+Next: access the dedicated Supabase project documented in newer GitHub commits, confirm the 16 applied migrations through the ledger, execute 300 authored SQL assertions and real service/browser tests, then run and rehearse demo:pitch. Full gaps and pitch instructions are in REDESIGN_AND_PITCH_REPORT.md. This is a locally tested prototype, not a fully completed product.
 
 # Current checkpoint — full-scope continuation, 2026-10-20
 

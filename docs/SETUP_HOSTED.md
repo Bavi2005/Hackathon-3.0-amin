@@ -2,7 +2,7 @@
 
 ## Current setup order — 22/23 October 2026
 
-The user confirmed no development project is configured yet. Create a **separate SmartTownship development project**, leaving AppointHub's database and ports alone. Use **http://127.0.0.1:5174** for Auth Site URL and allowed redirect; keep Email/password enabled and disable public signups. The trusted seed creates confirmed fictional accounts. Keep the Data API's public schema enabled; do not expose private.
+Newer GitHub commits document a **separate SmartTownship development project** with 16 applied migrations and database health checks. Obtain access to that existing project; leave AppointHub's database and ports alone. Use **http://127.0.0.1:5174** for Auth Site URL and allowed redirect; keep Email/password enabled and disable public signups. The trusted seed creates confirmed fictional accounts. Keep the Data API's public schema enabled; do not expose private.
 
 Collect the project URL, publishable API key, secret API key and **Session pooler PostgreSQL URI on port 5432** from the project's Connect/API Keys screens. The variable SUPABASE_SERVICE_ROLE_KEY accepts the current sb_secret_ key. Never put it in a VITE variable. Copy the exact pooler host/username and URL-encode special characters in the database password. These settings were checked against [Supabase connections](https://supabase.com/docs/guides/database/connecting-to-postgres), [API keys](https://supabase.com/docs/guides/getting-started/api-keys) and [Auth settings](https://supabase.com/docs/guides/auth/general-configuration).
 
@@ -18,7 +18,7 @@ npm.cmd run test:services
 npm.cmd run test:e2e
 ```
 
-There are **16 migrations and 300 authored SQL assertions**, all awaiting hosted execution. Seed once: repeated seeding adds new fictional tenants/accounts rather than resetting data. The database simulation flag must be enabled through demo:configure; an environment variable alone does not update it. Leave browser tests sole use of 5174 while they run.
+The newer GitHub commits report **all 16 migrations applied** to development. The **300 authored SQL assertions** still await hosted execution. The migration command should recognize previously applied files; stop and reconcile ledger/hash differences if it does not. Seed once: repeated seeding adds new fictional tenants/accounts rather than resetting data. The database simulation flag must be enabled through demo:configure; an environment variable alone does not update it. Leave browser tests sole use of 5174 while they run.
 
 After these pass, start the app from the same configured terminal:
 
@@ -32,7 +32,7 @@ npm.cmd run dev
 
 Open **http://127.0.0.1:5174** and use the generated account email plus the DEMO_PASSWORD you entered (at least 16 characters). Start with admin, resident, guard, driver, dispatcher or parking for the matching workflow. The first operator has explicit platform metadata permission. Do not share keys/passwords in chat. Keep **5173 and 5000** for AppointHub. Existing agent processes do not inherit secrets set in another terminal; run hosted commands in the terminal where you entered them.
 
-Current local verification: **84 unit, 36 native runtime, 53 browser contract and 3 setup tests pass**, with lint/typecheck/build and HTTP smoke. The aggregate verification still exits 1 because database, real service and live audit gates are blocked. Browser contract fixtures are not hosted proof. See CURRENT_SCOPE.md for functionality still pending and TEST_EVIDENCE.md for evidence. Older numerical checkpoints in this guide are superseded by this section.
+Current local verification: **84 unit, 36 native runtime, 53 browser contract and 3 setup tests pass**, with lint/typecheck/build and HTTP smoke. The aggregate verification still exits 1 because SQL tests, real service and live audit gates are blocked in this workspace. Browser contract fixtures are not hosted proof. See CURRENT_SCOPE.md for functionality still pending and TEST_EVIDENCE.md for evidence. Older numerical checkpoints in this guide are superseded by this section.
 
 Status on 2026-10-20: dependencies/lockfile, frontend/backend builds, TypeScript, lint, 63 Vitest tests, 28 native tests and 25 Edge UI contract tests pass locally; earlier 3 Edge setup tests also passed. Browser tests use port 5174 and synthetic responses; hosted database/account/Realtime workflows remain unverified. No cloud project or deployment was created. Use a dedicated development/demo project with fictional data only.
 
@@ -70,9 +70,9 @@ npm.cmd run test:e2e:setup
 
 This passes three browser setup/layout tests at 360, 768 and 1440 pixels without Supabase credentials. `npm.cmd run test:e2e:contract` additionally passes 53 UI contract tests with explicit synthetic HTTP responses; those do not prove hosted Auth/RLS or tenant isolation. Both modes use strict port 5174, compile the production frontend into isolated `.local/browser-dist` paths and leave `apps/web/dist` unchanged. For bundled Chromium instead: `npx.cmd playwright install chromium`, then remove PLAYWRIGHT_CHANNEL from the process environment.
 
-## 2. Create/configure the development Supabase project
+## 2. Access/configure the dedicated development Supabase project
 
-Choose Supabase Free; do not enable paid add-ons. Select an appropriate region and a unique database password. Wait until the database is active. Configure Auth site URL `http://127.0.0.1:5174` and the intended Pages HTTPS origin when known. Port 5173 is reserved for the user's other application. Disable public email signups: fictional accounts are provisioned by the trusted seed. No SMS provider, external map key or hardware is needed.
+Use the existing dedicated SmartTownship development project documented in GitHub; do not create a second project or change its password merely to follow this guide. Confirm its region, active status and connection details with the project owner. Configure Auth site URL `http://127.0.0.1:5174` and the intended Pages HTTPS origin when known. Port 5173 is reserved for the user's other application. Disable public email signups: fictional accounts are provisioned by the trusted seed. No SMS provider, external map key or hardware is needed.
 
 Record these values securely:
 
@@ -143,7 +143,7 @@ npm.cmd run test:services
 npm.cmd run test:e2e
 ```
 
-`db:migrate` uses pg over verified TLS, an advisory lock, an RLS-protected private migration ledger and hashes. It applies the 16 migration files transactionally, records versions, rejects edited applied migrations and performs no reset/drop. It is intended for this dedicated development project. If migrations were already installed manually/by CLI, do not blindly reapply or fabricate ledger entries; reconcile migration history first. Migration 006 adds masked search/export and audit metadata; 007 adds immutable form versions and retained answer storage. Neither changes existing membership grants.
+`db:migrate` uses pg over verified TLS, an advisory lock, an RLS-protected private migration ledger and hashes. It recognizes the 16 migrations reported as already applied, rejects edited applied migrations and performs no reset/drop. It is intended for this dedicated development project. If migrations were already installed manually/by CLI, do not blindly reapply or fabricate ledger entries; reconcile migration history first. Migration 006 adds masked search/export and audit metadata; 007 adds immutable form versions and retained answer storage. Neither changes existing membership grants.
 
 `test:integration` connects to hosted PostgreSQL directly, executes the 300 authored pgTAP assertions and rejects failing, skipped or mismatched plans. Each test's fictional fixture transaction rolls back. A dedicated development DB admin connection is required because role/tenant isolation tests create fixtures and SET ROLE. None of these assertions has run in this workspace yet.
 

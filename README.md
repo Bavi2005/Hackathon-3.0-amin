@@ -1,6 +1,6 @@
 # SmartTownship
 
-Visitor registration, transport operations and parking share Supabase identity and tenant/site authorization. **Prototype: hosted verification and release gates remain open.** The user confirmed on 2026-10-20 that a development Supabase project is not configured yet.
+Visitor registration, transport operations and parking share Supabase identity and tenant/site authorization. **Prototype: hosted verification and release gates remain open.** Newer GitHub commits document a dedicated development Supabase project with all 16 migrations applied; SQL and live workflow verification remain open.
 
 Start with the Windows [setup guide](docs/SETUP_HOSTED.md). SmartTownship uses **http://127.0.0.1:5174**, strict port. Leave **5173 and 5000** for AppointHub. Core workflows need hosted Supabase; the optional device bridge uses 3001 and is not required for the demo.
 
@@ -39,7 +39,7 @@ npm run test:e2e
 npm run dev
 ```
 
-Run each command only after the previous one succeeds. There are **16 migration files and 300 authored pgTAP assertions**, none executed here. Migration ledger hashes prevent silently editing applied history. Seed is additive and creates fictional accounts; repeated seeds create more tenants, so do not rerun it casually. No reset is supplied. Browser tests own 5174; stop your SmartTownship dev server before running them.
+Run each command only after the previous one succeeds. Newer GitHub commits document **16 migration files applied** to development; **300 authored pgTAP assertions remain unexecuted here**. Migration ledger hashes prevent silently editing applied history. Seed is additive and creates fictional accounts; repeated seeds create more tenants, so do not rerun it casually. No reset is supplied. Browser tests own 5174; stop your SmartTownship dev server before running them.
 
 ## Source scope
 

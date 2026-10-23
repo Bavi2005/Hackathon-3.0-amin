@@ -17,7 +17,7 @@ Latest complete run: npm run verify:local -- --audit-unavailable, timestamp 2026
 
 New browser cases verify service shortcuts and displayed activity, home overflow at 1440/768/390/360, mobile More navigation and role visibility, login and honest empty activity. Existing 50 contracts remain passing. First run 52/53 failed because an export-cancellation test expected the old Parking heading; changed it to the existing Parking availability region and reran all 53 successfully. Typography was adjusted after initial screenshot review.
 
-No hosted migrations, seed, provider calls or deployment performed. **16 migrations / 300 authored SQL assertions remain unexecuted.** Current Node differs from the Node 22.18+ target. Screenshots use fictional test fixtures and do not establish live Realtime, authenticated persistence or availability. Earlier evidence below is historical.
+No hosted migration, seed, provider call or deployment was performed by this redesign work. Newer GitHub commits document all 16 migrations applied to development; **300 authored SQL assertions remain unexecuted here.** Current Node differs from the Node 22.18+ target. Screenshots use fictional test fixtures and do not establish live Realtime, authenticated persistence or availability. Earlier evidence below is historical.
 
 ﻿# Test evidence — 2026-10-20
 

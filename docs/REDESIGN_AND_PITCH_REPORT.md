@@ -6,7 +6,7 @@ Checkpoint: 22 October 2026. This report describes the source and evidence avail
 
 The red-and-white UI redesign is implemented and locally tested. It replaces the old presentation with a unified home, service navigation, mobile navigation, sign-in experience and shared visual styling across the existing modules. The application builds, typechecks and passes the local test suites listed below.
 
-The whole product is **not fully finished or production-ready**. No dedicated hosted Supabase project was configured for this checkpoint. Consequently, database migrations, tenant isolation, real account workflows, Realtime delivery and the new pitch seed have not been verified against a running database. The source contains substantial functionality, but a passing UI contract test cannot establish that its SQL implementation works.
+The whole product is **not fully finished or production-ready**. Newer commits on GitHub record that a dedicated Supabase development project was connected, all 16 migrations were applied and database health was checked on 20 October. Those events were performed outside this redesign workspace; this agent did not recheck the hosted project and had no credentials in its process. The 300 pgTAP assertions, tenant isolation, real account workflows, Realtime delivery and the new pitch seed remain unverified by this checkpoint. A passing UI contract test cannot establish SQL authorization.
 
 The practical next milestone is a rehearsed, fictional-data demonstration on dedicated development Supabase. That is achievable without connecting actual vehicles, collecting real visitor information or purchasing SMS/maps/hardware integrations. It still requires the hosted setup and acceptance commands to pass.
 
@@ -73,7 +73,7 @@ The final aggregate run completed at **2026-10-22T15:46:28.597Z**, on Windows wi
 | Production-browser setup tests | **3 passed**. |
 | Production-browser module contracts | **53 passed**, including new redesign, mobile navigation and empty-data coverage. |
 | Responsive checks | Home at 1440, 768, 390 and 360 pixels; existing module contracts also cover narrow layouts. Final desktop/mobile/login/parking screenshots visually inspected. |
-| PostgreSQL/pgTAP | Blocked before connection. **300 authored assertions across 16 migrations remain unexecuted here.** |
+| PostgreSQL/pgTAP | Blocked before connection. GitHub records the 16 migrations as applied to development, but **300 authored assertions remain unexecuted here**. |
 | Real Supabase account/workflow tests | Blocked at missing-configuration guard. |
 | Dependency advisory audit | Explicitly marked unavailable; not a security pass and not freshly retried in this run. |
 | New `demo:pitch` command | Attempted; correctly stopped at its missing-development-configuration guard before network/data changes. The hosted scenario itself has not run. |
@@ -108,7 +108,7 @@ Parking observations expire after **120 seconds**. Refresh them with the labelle
 
 ## 6. Exact preparation order
 
-Follow [SETUP_HOSTED.md](SETUP_HOSTED.md) for project creation, secure PowerShell prompts and the public browser variables. Use a dedicated development project and the same terminal for all configured commands. Do not paste keys or passwords into chat. Keep AppointHub's database separate.
+Follow [SETUP_HOSTED.md](SETUP_HOSTED.md) for secure PowerShell prompts and the public browser variables. Use the dedicated SmartTownship development project documented in the newer GitHub commits, and the same terminal for all configured commands. Do not paste keys or passwords into chat. Keep AppointHub's database separate. The migration command should report the 16 files as previously applied; stop and reconcile the ledger if it does not.
 
 After the documented environment is configured, run each command separately and stop at a failure:
 
@@ -161,10 +161,10 @@ Unsupported claims include a live deployed township, guaranteed parking, real-ti
 
 ## 9. Remaining work in priority order
 
-1. Configure dedicated development Supabase and pass migrations, all SQL assertions, real service workflows and hosted multi-role browser tests. Fix any failures exposed by execution.
+1. Confirm access to the already migrated dedicated development Supabase project. Run the migration-ledger check, all SQL assertions, real service workflows and hosted multi-role browser tests. Fix any failures exposed by execution.
 2. Execute `demo:pitch`, inspect actual records, rehearse the pitch and verify updates across real simultaneous accounts. Confirm simulator expiry, denied roles, revocation and network recovery.
 3. Qualify the supported Node runtime, obtain a current dependency audit and inspect the repository's CI results. Local success is not CI evidence.
 4. Finish product gaps in [CURRENT_SCOPE.md](CURRENT_SCOPE.md), prioritizing the demonstrated user journey: account recovery/onboarding, map/ETA integration and operational notifications when providers and scope are approved.
 5. Verify retention/Cron, concurrency, load, backup/restore, privacy and independent security requirements before any production claim. Deployment remains a separate approval and acceptance step.
 
-This redesign changes UI modules/styles and adds pitch preparation plus local coverage. It does not modify migrations, relax authorization, connect providers, collect real personal data or deploy infrastructure. Git publication of the source is separate from deployment; the final delivery message records the actual push result.
+This redesign changes UI modules/styles and adds pitch preparation plus local coverage. The remote branch also contains a separate migration-grant correction and Render static-site blueprint that must be preserved when merging. This redesign does not relax authorization, connect providers, collect real personal data or deploy infrastructure. Git publication of the source is separate from deployment; the final delivery message records the actual push result.

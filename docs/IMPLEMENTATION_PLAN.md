@@ -6,7 +6,7 @@
 - [x] Pass local build/type/lint/HTTP smoke, 84 unit, 36 runtime, 53 browser contract and 3 setup tests.
 - [x] Implement guarded additive fictional pitch preparation through real authenticated APIs; document scenario and partial-failure handling.
 - [x] Write detailed REDESIGN_AND_PITCH_REPORT.md with feature matrix, evidence, sample-data instructions, pitch sequence and open gates.
-- [ ] Configure dedicated hosted Supabase; execute 16 migrations and 300 authored SQL assertions, real service/browser/Realtime/concurrency checks.
+- [ ] Access the dedicated hosted Supabase project documented in newer GitHub commits, confirm its 16 applied migrations, and execute 300 authored SQL assertions, real service/browser/Realtime/concurrency checks.
 - [ ] Execute and rehearse the new pitch seed on that verified development project.
 - [ ] Close remaining functional, dependency, target-runtime, security/privacy, load/restore and deployment gates in CURRENT_SCOPE.md and PRODUCTION_CHECKLIST.md.
 

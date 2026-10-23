@@ -117,3 +117,33 @@ html,body,#root{max-width:100%;}
 .activity-row,.activity-row>span:nth-child(2),.service-description,.header-location,.header-location>div{min-width:0}
 .activity-row strong,.header-location strong{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:700px){.content{width:100%;margin-left:0}.content main{width:100%;padding-left:clamp(12px,5vw,19px);padding-right:clamp(12px,5vw,19px)}.service-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.service-card{overflow-wrap:anywhere}.home-hero{width:100%}.hero-copy{min-width:0}.app-header{max-width:100%}}
+
+.mobility-network{padding:29px;background:linear-gradient(130deg,#f3faf8,#fff 52%,#f6f8ff);border:1px solid #dcece9;border-radius:24px;margin:25px 0 31px}
+.mobility-network-header{display:flex;justify-content:space-between;gap:20px;align-items:center}
+.mobility-network-header h2{font-size:clamp(27px,3vw,40px);margin:10px 0;color:#173e47;letter-spacing:-.05em}
+.mobility-network-header p{font-size:13px;color:#627982;max-width:670px;line-height:1.7}
+.mobility-stat{display:flex;align-items:center;gap:7px;flex-direction:column;justify-content:center;min-width:150px;height:140px;border-radius:20px;background:linear-gradient(150deg,#123b51,#12685e);color:white;box-shadow:0 14px 35px #17454f20}
+.mobility-stat .icon{color:#9decce;width:24px;height:24px}
+.mobility-stat strong{font-size:46px;color:white;line-height:1;letter-spacing:-2px}
+.mobility-stat span{font-size:11px;color:#bbe9de}
+.mobility-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:24px 0}
+.mobility-overview>div{background:#fff;border:1px solid #e3ebed;border-radius:15px;padding:14px 17px}
+.mobility-metric-label{display:block;font-size:9px;letter-spacing:1px;color:#80949a;font-weight:750}
+.mobility-overview strong{display:block;color:#173d49;font-size:29px;margin-top:9px}
+.mobility-routes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.mobility-route{border:1px solid #dae8e7;background:#fff;border-radius:19px;padding:20px;min-width:0}
+.mobility-route-title{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.mobility-route-id{font-size:9px;font-weight:800;color:#087b70;letter-spacing:1.3px}
+.mobility-route h3{font-size:18px;color:#1d414a;margin:8px 0}
+.mobility-headway{font-size:10px;background:#e6f7ef;border-radius:100px;color:#06785d;padding:7px 10px;white-space:nowrap;font-weight:700}
+.mobility-stops{display:flex;gap:0;align-items:flex-start;justify-content:space-between;margin:30px 0 22px}
+.mobility-stop{position:relative;display:flex;flex:1;flex-direction:column;align-items:center;text-align:center;padding:0 7px;min-width:0}
+.mobility-stop:not(:last-child)::before{content:'';height:3px;background:#8cc9bb;position:absolute;left:50%;width:100%;top:9px;z-index:0}
+.mobility-node{position:relative;z-index:1;width:21px;height:21px;background:#bce7d5;border:5px solid #f0faf6;border-radius:50%;display:block;box-shadow:0 0 0 1px #93cbb9;flex-shrink:0}
+.mobility-node.endpoint{background:#077f70;box-shadow:0 0 0 2px #077f7033}
+.mobility-stop strong{font-size:10px;line-height:1.45;max-width:110px;margin-top:11px;color:#365c64;overflow-wrap:anywhere}
+.mobility-route-time{font-size:10px;color:#7e9296;line-height:1.5;display:flex;gap:7px;align-items:flex-start;margin:12px 0 0}
+.mobility-route-time .icon{width:14px;height:14px;flex-shrink:0;margin-top:2px}
+.mobility-empty{font-size:13px}
+@media(max-width:950px){.mobility-routes{grid-template-columns:1fr}}
+@media(max-width:700px){.mobility-network{padding:19px}.mobility-network-header{align-items:flex-start}.mobility-stat{min-width:93px;width:93px;height:106px;flex-shrink:0}.mobility-stat strong{font-size:32px}.mobility-stat span{font-size:9px;text-align:center}.mobility-network-header h2{font-size:25px}.mobility-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mobility-overview>div{padding:12px}.mobility-overview strong{font-size:23px}.mobility-stop{padding:0 4px}.mobility-stop strong{font-size:9px}.mobility-headway{font-size:9px;padding:6px}.mobility-route{padding:14px}}

@@ -44,6 +44,7 @@ function App(){
  const token=new URLSearchParams(hash.slice(1)).get('invite');
  const staffToken=new URLSearchParams(hash.slice(1)).get('staff');
  const checkinToken=new URLSearchParams(hash.slice(1)).get('checkin');
+ const arrivalIntent=new URLSearchParams(hash.slice(1)).get('intent')==='loading'?'loading':'visitor';
  const m=members.find(x=>x.site_id===site);const can=(c:string)=>m?.capabilities.includes(c)??false;
  const stop=useCallback(()=>{if(watch.current!==null)navigator.geolocation.clearWatch(watch.current);watch.current=null;sharingVehicle.current=null;setSharing(false);},[]);
  const load=useCallback(async()=>{
@@ -89,8 +90,8 @@ function App(){
  function gps(v:Row){if(!navigator.geolocation){setError('Geolocation unavailable on this device');return;}stop();sharingVehicle.current=String(v.id);last.current=0;setSharing(true);watch.current=navigator.geolocation.watchPosition(p=>{if(Date.now()-last.current<5000)return;last.current=Date.now();void rpc('telemetry',{p_vehicle:v.id,p_lat:p.coords.latitude,p_lng:p.coords.longitude,p_accuracy:p.coords.accuracy,p_observed:new Date(p.timestamp).toISOString(),p_simulated:false}).catch(e=>{setError(e.message);stop();});},e=>{setError(`Location unavailable: ${e.message}`);stop();},{enableHighAccuracy:true,maximumAge:0,timeout:15000});}
  const notices=<>{error&&<p role="alert" className="error">{error}</p>}{message&&<p role="status" className="success">{message}</p>}</>;
  if(!db)return <Welcome configured={false}/>;
- if(token)return <GuestRegistration key={token} db={db} token={token}/>;
- if(checkinToken)return <PublicCheckin key={checkinToken} db={db} token={checkinToken}/>;
+ if(token)return <GuestRegistration key={token} db={db} token={token} intent={arrivalIntent}/>;
+ if(checkinToken)return <PublicCheckin key={checkinToken} db={db} token={checkinToken} intent={arrivalIntent}/>;
  if(!ready)return <main>Checking your session…</main>;
  if(!session)return <Welcome configured>{notices}<form className="login-form" onSubmit={e=>{const f=fields(e);void action(async()=>{const {error}=await db.auth.signInWithPassword({email:String(f.get('email')),password:String(f.get('password'))});if(error)throw error;},'');}}><label>Email<input type="email" name="email" autoComplete="username" placeholder="you@example.com" required/></label><label>Password<input type="password" name="password" autoComplete="current-password" placeholder="Enter your password" required/></label><button disabled={busy}>Sign in <Icon name="arrow"/></button></form></Welcome>;
  const rides=data.rides??[],visits=data.visits??[],vehicles=data.vehicles??[];

@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState, type ReactNode} from 'react';
 import type {SupabaseClient} from '@supabase/supabase-js';
 import {currentBayStatus, zoneAvailability, type ParkingOverview} from '../../../packages/contracts/parking-overview';
+import {ParkingExplorer} from './ParkingExplorer';
 
 function ParkingAction({label, busy, children, submit}: {label: string; busy: boolean; children: ReactNode; submit: (fields: FormData, request: string) => Promise<void>}) {
   const request = useRef(crypto.randomUUID());
@@ -37,11 +38,7 @@ export function ParkingPanel({db, site, capabilities, now}: {db: SupabaseClient;
     {error && <p role="alert" className="error">{error}</p>}{message && <p role="status" className="success">{message}</p>}
     <button className="secondary" disabled={busy} onClick={() => {setError(''); void load().catch(e => setError(e.message));}}>Refresh parking</button>
     {!data && !error && <p>Loading parking…</p>}
-    {data && <><div className="parking-hero"><div><span className="eyebrow">SMART PARKING · DIGITAL TWIN</span><h2>Find a space. Skip the guesswork.</h2><p>See each facility, level and zone. These are fictional demo readings updated through the backend simulator; they are not measurements from a real mall.</p><div className="parking-hero-key"><span><i className="parking-key-dot free"/> Available</span><span><i className="parking-key-dot occupied"/> Occupied</span><span><i className="parking-key-dot unknown"/> Unknown / stale</span></div></div><div className="parking-hero-number"><strong>{data.zones.filter(z=>z.kind==='counter').reduce((total,z)=>total+(zoneAvailability(z,now).free??0),0)}</strong><span>simulated spaces free</span><small>Across fresh counter zones only</small></div></div>
-    <div className="parking-network-stats">
-      <div><strong>{data.facilities.length}</strong><span>Facilities</span></div><div><strong>{data.levels.length}</strong><span>Parking levels</span></div>
-      <div><strong>{data.zones.length}</strong><span>Monitored zones</span></div><div><strong>{data.zones.filter(z=>zoneAvailability(z,now).free!==null).length}</strong><span>Zones reporting</span></div>
-    </div><div className="parking-zones-grid">{data.zones.map(z => {
+    {data && <><ParkingExplorer data={data} now={now}/><div className="garage-operations-head"><span className="eyebrow">ZONE DETAIL & OPERATIONS</span><h2>Parking observations</h2><p>Source-level readings and authorized simulation controls. Mall and floor navigation is above.</p></div><div className="parking-zones-grid">{data.zones.map(z => {
       const availability = zoneAvailability(z, now), device = data.devices.find(d => d.zone_id === z.id && !d.bay_id);
       return <article className="parking-zone-card" key={z.id}><div className="parking-zone-heading"><span className="badge">{availability.source}</span><span className={availability.free===null?'parking-source stale':'parking-source'}>{availability.free===null?'● STALE / UNKNOWN':'● CURRENT DEMO'}</span></div><h2>{z.name}</h2>
         {(z.facility_name || z.level_name) && <p>{z.facility_name} / {z.level_name}</p>}

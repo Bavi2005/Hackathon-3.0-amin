@@ -65,7 +65,7 @@ export function SiteAdministration({db, site, user, capabilities}: {db: Supabase
       </article>}
       {can('staff.manage') && <article><h2>Site memberships</h2><p>Account reference for your profile: {user}. Administrative memberships are provisioned separately.</p>
         {data.members.map(m => <article key={`${m.id}:${m.revision}`}><h3>{m.role.replaceAll('_', ' ')}</h3><p>Account {m.user_id} · {m.active ? 'Active' : 'Disabled'} · Revision {m.revision}</p>
-          {m.user_id !== user && ['STAFF', 'DRIVER'].includes(m.role) && <Editor title="Staff membership" busy={busy} submit={f => save(() => rpc('set_staff_membership', {...common, p_id: m.id, p_expected: m.revision, p_template: f.get('template'), p_active: f.get('active') === 'on'}))}>
+          {m.user_id !== user && ['STAFF', 'DRIVER', 'LOADER'].includes(m.role) && <Editor title="Staff membership" busy={busy} submit={f => save(() => rpc('set_staff_membership', {...common, p_id: m.id, p_expected: m.revision, p_template: f.get('template'), p_active: f.get('active') === 'on'}))}>
             <TemplateSelect value={memberTemplate(m)}/><label className="check"><input name="active" type="checkbox" defaultChecked={m.active}/>Site access enabled</label>
             <label className="check"><input type="checkbox" required/>I confirm this staff access change.</label>
           </Editor>}</article>)}

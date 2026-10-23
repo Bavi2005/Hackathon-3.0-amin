@@ -76,7 +76,7 @@ function App(){
  },[session?.user.id]);
  useEffect(()=>{
   setPlatform(false);setPlatformReady(false);setPlatformError('');if(!db||!session?.user.id)return;let active=true;
-  const refresh=()=>{void db.from('platform_admins').select('user_id').eq('user_id',session.user.id).eq('active',true).limit(1).abortSignal(AbortSignal.timeout(10000)).then(({data,error})=>{if(!active)return;setPlatform(!error&&!!data?.length);setPlatformError(error?.message??'');setPlatformReady(true);}).catch(error=>{if(active){setPlatform(false);setPlatformError(error instanceof Error?error.message:'Platform permission lookup unavailable');setPlatformReady(true);}});};
+  const refresh=()=>{void db.from('platform_admins').select('user_id').eq('user_id',session.user.id).eq('active',true).limit(1).abortSignal(AbortSignal.timeout(10000)).then(({data,error})=>{if(!active)return;setPlatform(!error&&!!data?.length);setPlatformError(error?.message??'');setPlatformReady(true);},(error:unknown)=>{if(active){setPlatform(false);setPlatformError(error instanceof Error?error.message:'Platform permission lookup unavailable');setPlatformReady(true);}});};
   refresh();const timer=setInterval(refresh,30000);return()=>{active=false;clearInterval(timer);};
  },[session?.user.id]);
  useEffect(()=>{const change=()=>{stop();setHash(location.hash);setMessage('');setError('');};window.addEventListener('hashchange',change);return()=>window.removeEventListener('hashchange',change);},[stop]);

@@ -17,8 +17,15 @@ export function PlatformAdministration({db}: {db: SupabaseClient}) {
   return <section aria-label="Platform administration"><p>This separately granted platform view contains tenant configuration and counts. It gives no default access to private visitor records or GPS. Do not enter real organization or account information in this prototype.</p>
     {error && <p role="alert" className="error">{error}</p>}{message && <p role="status" className="success">{message}</p>}
     <button className="secondary" disabled={busy} onClick={() => void load().catch(e => setError(e.message))}>Refresh platform</button>
-    {data && <><p>Deployment simulation: {data.simulation_enabled ? 'Enabled for development' : 'Disabled'}</p><ul>{Object.entries(data.integrations).map(([name, status]) => <li key={name}>{name}: {status}</li>)}</ul>
-      <div className="cards">{data.tenants.map(t => <article key={t.id}><h2>{t.name}</h2><p>{t.demo ? 'Fictional demo tenant' : 'Tenant'} · {t.sites} sites · {t.active_memberships} active site memberships</p></article>)}</div>
+    {data && <><div className="cards" aria-label="Platform pulse">
+      <article><span className="eyebrow">TOWNSHIPS</span><strong className="count">{data.tenants.length}</strong><p>Organizations in the platform</p></article>
+      <article><span className="eyebrow">MANAGED SITES</span><strong className="count">{data.tenants.reduce((n,t)=>n+t.sites,0)}</strong><p>Configured community locations</p></article>
+      <article><span className="eyebrow">ACTIVE MEMBERSHIPS</span><strong className="count">{data.tenants.reduce((n,t)=>n+t.active_memberships,0)}</strong><p>Accounts assigned to sites</p></article>
+      <article><span className="eyebrow">SIMULATOR</span><strong className="count">{data.simulation_enabled?'On':'Off'}</strong><p>Development-only fictional activity</p></article>
+    </div>
+    <h2>Township portfolio</h2><p>Aggregate figures only. Private resident, visitor and GPS records remain protected.</p>
+    <div className="cards">{data.tenants.map(t=><article key={t.id}><span className="badge">{t.demo?'FICTIONAL DEMO':'TENANT'}</span><h2>{t.name}</h2><p><strong>{t.sites}</strong> sites · <strong>{t.active_memberships}</strong> active memberships</p><small>Reference: {t.id.slice(0,8)}</small></article>)}</div>
+    <h2>Integration status</h2><div className="cards">{Object.entries(data.integrations).map(([name,status])=><article key={name}><span className="eyebrow">{name.toUpperCase()}</span><h3>{name==='sms'?'Visitor verification':name==='routing'?'Shuttle routing':'Parking sensors'}</h3><p>{status}</p></article>)}</div>
       <form onChange={() => {request.current = crypto.randomUUID();}} onSubmit={e => {e.preventDefault(); void create(new FormData(e.currentTarget));}}><fieldset disabled={busy}><legend>Create tenant</legend>
         <label>Tenant name<input name="name" required maxLength={100}/></label><label>Initial site name<input name="site" required maxLength={100}/></label><label>Initial administrator account reference<input name="admin" required pattern="[0-9a-fA-F-]{36}"/></label>
         <label className="check"><input type="checkbox" required/>I confirm the new tenant and this explicit administrator assignment.</label><button disabled={busy}>Create tenant and site</button>

@@ -53,3 +53,19 @@ test('parking opens mall overview then floor and displays only genuinely configu
  await expect(explorer.getByText('P1-02',{exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
 });
+
+
+test('delivery entrance QR preserves loading intent through private no-app guest registration',async({page})=>{
+ const f=await contractFixture(page,'manager');
+ f.state.activeForm={id:id(850),version:1,title:'Mall visitor and delivery check-in',template:'office',fields:[{key:'purpose',required:true}],created_at:new Date().toISOString()};
+ await f.login();await page.getByRole('navigation').getByRole('button',{name:'MyVisitor',exact:true}).click();
+ const issuer=page.getByRole('region',{name:'Public site check-in QR'});
+ await issuer.getByRole('button',{name:'Generate walk-in QR code'}).click();
+ await expect(page.getByRole('region',{name:'Mall loading entrance QR'}).getByRole('img',{name:'Mall loading entrance QR for delivery visitor registration'})).toHaveAttribute('src',/^data:image\/png/);
+ await page.getByRole('link',{name:'Test delivery check-in ↗'}).click();
+ await expect(page.getByRole('heading',{name:'Mall delivery & loading entry'})).toBeVisible();
+ await page.getByRole('button',{name:'Start visitor registration'}).click();
+ await expect(page.getByRole('heading',{name:'Delivery & loading registration'})).toBeVisible();
+ await expect(page.getByRole('combobox',{name:'Purpose of visit (required)'})).toHaveValue('Delivery');
+ expect(f.calls.find(c=>c.name==='begin_site_checkin')?.args.p_token).toBe('d'.repeat(64));
+});

@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import type {SupabaseClient} from '@supabase/supabase-js';
 import QRCode from 'qrcode';
-export function PublicCheckin({db, token}: {db: SupabaseClient; token: string}) {
+export function PublicCheckin({db, token, intent='visitor'}: {db: SupabaseClient; token: string; intent?: 'visitor'|'loading'}) {
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const request = useRef(crypto.randomUUID()), pending = useRef<AbortController | null>(null);
   useEffect(() => () => pending.current?.abort(), []);
@@ -9,16 +9,16 @@ export function PublicCheckin({db, token}: {db: SupabaseClient; token: string}) 
     if (busy) return; const controller = new AbortController(); pending.current = controller; setBusy(true); setError('');
     try {
       const {data, error} = await db.rpc('begin_site_checkin', {p_token: token, p_request: request.current}).abortSignal(AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]));
-      if (controller.signal.aborted) return; if (error) throw Error(error.message); location.hash = `invite=${data.token}`;
+      if (controller.signal.aborted) return; if (error) throw Error(error.message); location.hash = `invite=${data.token}${intent==='loading'?'&intent=loading':''}`;
     } catch (failure) {if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'Site check-in unavailable');}
     finally {if (!controller.signal.aborted) setBusy(false);}
   }
-  return <main className="setup"><h1>Site visitor check-in</h1><p>Start a private, single-use registration from the site's displayed QR. No account is required. Use fictional details in this prototype; security staff verify entry separately.</p>
+  return <main className="setup"><h1>{intent==='loading'?'Mall delivery & loading entry':'Site visitor check-in'}</h1><p>Start a private, single-use registration from the site's displayed QR. No account is required. Use fictional details in this prototype; security staff verify entry separately.</p>{intent==='loading'&&<p className="delivery-guest-note">Drivers and delivery personnel: use the visitor form to register your arrival, then show the confirmation at the loading desk. Loading bay access and vehicle check-in are handled by authorized staff; scanning does not reserve a space.</p>}
     {error && <p role="alert" className="error">{error}</p>}<button disabled={busy} onClick={() => void start()}>Start visitor registration</button><p>If the link is expired or mobile service is unavailable, ask the guard for assistance.</p>
   </main>;
 }
 export function SiteCheckinIssuer({db, site}: {db: SupabaseClient; site: string}) {
-  const [link, setLink] = useState(''), [qr, setQr] = useState(''), [id, setId] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
+  const [link, setLink] = useState(''), [qr, setQr] = useState(''), [loadingQr, setLoadingQr] = useState(''), [id, setId] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
   const pending = useRef<AbortController | null>(null);
   useEffect(() => () => pending.current?.abort(), []);
   async function change(revoke: boolean) {
@@ -26,10 +26,10 @@ export function SiteCheckinIssuer({db, site}: {db: SupabaseClient; site: string}
     try {
       const {data, error} = await db.rpc(revoke ? 'revoke_site_checkin_link' : 'create_site_checkin_link', {p_site: site, ...(revoke ? {p_id: id} : {})}).abortSignal(AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]));
       if (controller.signal.aborted) return; if (error) throw Error(error.message);
-      if (revoke) {setLink(''); setQr(''); setId(''); setMessage('Site check-in link revoked. Previously started private flows retain their original expiry.');}
+      if (revoke) {setLink(''); setQr(''); setLoadingQr(''); setId(''); setMessage('Site check-in link revoked. Previously started private flows retain their original expiry.');}
       else {
-        const value = `${location.origin}${location.pathname}#checkin=${data.token}`, image = await QRCode.toDataURL(value, {width: 240, margin: 2});
-        if (controller.signal.aborted) return; setLink(value); setQr(image); setId(data.id); setMessage('Site QR issued for 24 hours. Previous site QR links are revoked; existing private flows keep their expiry.');
+        const value = `${location.origin}${location.pathname}#checkin=${data.token}`, image = await QRCode.toDataURL(value, {width: 240, margin: 2}), deliveryImage = await QRCode.toDataURL(value+'&intent=loading', {width: 240, margin: 2});
+        if (controller.signal.aborted) return; setLink(value); setQr(image); setLoadingQr(deliveryImage); setId(data.id); setMessage('Site QR issued for 24 hours. Previous site QR links are revoked; existing private flows keep their expiry.');
       }
     } catch (failure) {if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'Site QR unavailable');}
     finally {if (!controller.signal.aborted) setBusy(false);}
@@ -52,6 +52,7 @@ export function SiteCheckinIssuer({db, site}: {db: SupabaseClient; site: string}
         <button type="button" className="secondary" disabled={busy} onClick={() => void change(true)}>Revoke public QR</button>
       </div>
     </div>}
+    {link&&loadingQr&&<section className="qr-loading-option" aria-label="Mall loading entrance QR"><div><span className="eyebrow">MYVISITOR / DELIVERY ACCESS</span><h3>A separate loading-entrance QR.</h3><p>Display this at the mall loading gate. It starts the same private, no-app visitor registration with Delivery preselected when the form includes purpose. Loading staff record the vehicle's separate arrival and departure in Loading Dock.</p><a href={link+'&intent=loading'}>Test delivery check-in ↗</a><p><a href={loadingQr} download="smarttownship-loading-entrance-qr.png">Save loading QR image ↓</a></p></div><img src={loadingQr} alt="Mall loading entrance QR for delivery visitor registration" width="176" height="176"/></section>}
     <div className="qr-actions"><button type="button" disabled={busy} onClick={() => void change(false)}>{busy?'Working…':link?'Rotate public QR':'Generate walk-in QR code'}</button></div>
     <p className="qr-issuer-footnote">Private resident invitations are separate. Never place personal invitation QRs on public signage. This prototype uses fictional registrations and no physical identity verification.</p>
   </section>;

@@ -2,7 +2,6 @@ import {useEffect,useMemo,useState} from 'react';
 import {currentBayStatus,zoneAvailability,type ParkingOverview,type ParkingZone} from '../../../packages/contracts/parking-overview';
 
 type Facility = ParkingOverview['facilities'][number];
-type Level = ParkingOverview['levels'][number];
 type Group = {free:number;capacity:number;unknown:number;reporting:number};
 function overview(zones:ParkingZone[],now:number):Group{
  return zones.reduce((a,z)=>{const availability=zoneAvailability(z,now);a.capacity+=z.capacity;if(availability.free===null)a.unknown+=z.capacity;else {a.free+=availability.free;a.reporting++;}return a;},{free:0,capacity:0,unknown:0,reporting:0});

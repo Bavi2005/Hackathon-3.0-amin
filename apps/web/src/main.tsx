@@ -1,6 +1,7 @@
 import {Component,useCallback,useEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createClient,type SupabaseClient,type Session} from '@supabase/supabase-js';
+import {tabAuthOptions} from './tab-auth';
 import QRCode from 'qrcode';
 import {VisitorRecords} from './VisitorRecords';
 import {GuestRegistration} from './GuestRegistration';
@@ -27,7 +28,7 @@ import {Icon} from './Icon';
 import './style.css';
 
 const url=import.meta.env.VITE_SUPABASE_URL,key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-function connect():SupabaseClient|null{if(!url||!key)return null;try{return createClient(url,key);}catch{return null;}}
+function connect():SupabaseClient|null{if(!url||!key)return null;try{return createClient(url,key,{auth:tabAuthOptions(url)});}catch{return null;}}
 const db=connect();
 type Row=Record<string,string|number|boolean|null>;
 type Membership={id:string;tenant_id:string;site_id:string;role:string;capabilities:string[]};
@@ -100,7 +101,7 @@ function App(){
   const tabs=m?.role==='LOADER'?['Loading','Parking','Account','Privacy']:['Overview','Transportation','MyVisitor','Parking',...(loadingManager?['Loading']:[]),'Account','Privacy',...(can('visits.forms.manage')?['Forms']:[]),...(['staff.manage','fleet.configure','parking.configure'].some(can)?['Administration']:[]),...(can('analytics.read')?['Analytics']:[]),...(platform?['Platform']:[]),...(can('audit.read')?['Audit']:[])];
  const navigate=(t:string)=>{setTab(t);setMessage('');setError('');};
  const siteName=String(data.sites?.[0]?.name??'Your township');
- return <AppShell tabs={tabs} tab={tab} onNavigate={navigate} role={m?.role.replaceAll('_',' ')??'No membership'} site={site} sites={members.map(x=>({id:x.site_id,name:x.site_id===site?siteName:x.role.replaceAll('_',' ')+' · '+x.site_id.slice(0,8)}))} onSite={setSite} siteName={siteName} email={session.user.email??''} busy={busy} connection={connection} onSignOut={()=>void action(async()=>{stop();const {error}=await db.auth.signOut();if(error)throw error;},'Signed out')}>
+ return <AppShell tabs={tabs} tab={tab} onNavigate={navigate} role={m?.role.replaceAll('_',' ')??'No membership'} site={site} sites={members.map(x=>({id:x.site_id,name:x.site_id===site?siteName:x.role.replaceAll('_',' ')+' · '+x.site_id.slice(0,8)}))} onSite={setSite} siteName={siteName} email={session.user.email??''} busy={busy} connection={connection} onSignOut={()=>void action(async()=>{stop();const {error}=await db.auth.signOut({scope:'local'});if(error)throw error;},'Signed out')}>
  <div className="title"><div><span className="eyebrow">{tab==='Overview'?'YOUR EVERYDAY, REIMAGINED':siteName}</span><h1>{tab==='Overview'?'Hello, neighbour.':tab==='Transportation'?'Where are we heading?':tab==='MyVisitor'?'Good company starts here.':tab==='Parking'?'A space for your next stop.':tab==='Loading'?'Loading dock operations.':tab}</h1><p className="muted">{tab==='Overview'?'A little less planning. A little more living.':tab==='Transportation'?'Your community. One journey at a time.':tab==='MyVisitor'?'Thoughtful welcomes. Simple, secure arrivals.':tab==='Parking'?'Find a mall, choose a floor and see available spaces.':tab==='Loading'?'Record delivery arrivals and departures without a paper logbook.':'Everything you need, with the access that’s right for you.'}</p></div><button className="refresh-button" aria-label="Refresh" disabled={busy} onClick={()=>void action(load,'Refreshed')}><Icon name="refresh"/><span>Refresh</span></button></div>
  <div className="banner"><span className="prototype-dot"/><strong>DEMONSTRATION</strong><span>Fictional services · Simulated sources labelled · No guaranteed availability</span></div>{notices}{!site&&<p className="empty-state">No site access. Ask your administrator to provision membership. Your account reference: {session.user.id}</p>}
  {tab==='Overview'&&platform&&m?.role==='PLATFORM_OPERATOR'?<PlatformAdministration db={db}/>:tab==='Overview'&&<HomeDashboard data={data} now={now} onNavigate={navigate}/>}

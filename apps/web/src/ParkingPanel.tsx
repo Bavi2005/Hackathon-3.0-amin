@@ -37,23 +37,27 @@ export function ParkingPanel({db, site, capabilities, now}: {db: SupabaseClient;
     {error && <p role="alert" className="error">{error}</p>}{message && <p role="status" className="success">{message}</p>}
     <button className="secondary" disabled={busy} onClick={() => {setError(''); void load().catch(e => setError(e.message));}}>Refresh parking</button>
     {!data && !error && <p>Loading parking…</p>}
-    {data && <><div className="cards">{data.zones.map(z => {
+    {data && <><div className="parking-hero"><div><span className="eyebrow">SMART PARKING · DIGITAL TWIN</span><h2>Find a space. Skip the guesswork.</h2><p>See each facility, level and zone. These are fictional demo readings updated through the backend simulator; they are not measurements from a real mall.</p><div className="parking-hero-key"><span><i className="parking-key-dot free"/> Available</span><span><i className="parking-key-dot occupied"/> Occupied</span><span><i className="parking-key-dot unknown"/> Unknown / stale</span></div></div><div className="parking-hero-number"><strong>{data.zones.filter(z=>z.kind==='counter').reduce((total,z)=>total+(zoneAvailability(z,now).free??0),0)}</strong><span>simulated spaces free</span><small>Across fresh counter zones only</small></div></div>
+    <div className="parking-network-stats">
+      <div><strong>{data.facilities.length}</strong><span>Facilities</span></div><div><strong>{data.levels.length}</strong><span>Parking levels</span></div>
+      <div><strong>{data.zones.length}</strong><span>Monitored zones</span></div><div><strong>{data.zones.filter(z=>zoneAvailability(z,now).free!==null).length}</strong><span>Zones reporting</span></div>
+    </div><div className="parking-zones-grid">{data.zones.map(z => {
       const availability = zoneAvailability(z, now), device = data.devices.find(d => d.zone_id === z.id && !d.bay_id);
-      return <article key={z.id}><span className="badge">{availability.source}</span><h2>{z.name}</h2>
+      return <article className="parking-zone-card" key={z.id}><div className="parking-zone-heading"><span className="badge">{availability.source}</span><span className={availability.free===null?'parking-source stale':'parking-source'}>{availability.free===null?'● STALE / UNKNOWN':'● CURRENT DEMO'}</span></div><h2>{z.name}</h2>
         {(z.facility_name || z.level_name) && <p>{z.facility_name} / {z.level_name}</p>}
-        <strong className="count">{availability.free === null ? 'Unknown' : `${availability.free} free`}</strong>
+        <strong className="count">{availability.free === null ? 'Unknown' : `${availability.free} free`}</strong><div className="parking-capacity-bar" aria-hidden="true"><span style={{width:availability.free===null?'0%':`${Math.round(100*availability.free/z.capacity)}%`}}/></div>
         <p>Capacity {z.capacity} · {availability.observed ? new Date(availability.observed).toLocaleString('en-MY', {timeZone: 'Asia/Kuala_Lumpur'}) : 'See individual observations below'}</p>
         {availability.source === 'MANUAL OVERRIDE' && <><p>Manual count expires {new Date(z.override!.expires_at).toLocaleString('en-MY', {timeZone: 'Asia/Kuala_Lumpur'})}. Reason: {z.override!.reason.replaceAll('_', ' ')}.</p>
           {can('parking.update.manual') && <button className="secondary" disabled={busy} onClick={() => void save('clear_parking_override', {p_zone: z.id}, 'Manual override cleared; current sensor availability restored')}>Clear manual override</button>}</>}
         {z.kind === 'bay' ? <><p>{z.bays.length}/{z.capacity} bays configured. Unreported or stale bays are unknown.</p>
-          {z.bays.map(b => {const d = data.devices.find(d => d.bay_id === b.id); return <article key={b.id}><h3>{b.label}{b.accessible ? ' · Accessible' : ''}</h3>
+          <div className="parking-bays-grid">{z.bays.map(b => {const d = data.devices.find(d => d.bay_id === b.id); return <div className={`parking-bay parking-bay-${currentBayStatus(b,now).toLowerCase()}`} key={b.id}><h3>{b.label}{b.accessible ? ' · ♿' : ''}</h3>
             <p>{currentBayStatus(b, now).replaceAll('_', ' ')}{b.simulated ? ' · SIMULATED' : ''}</p>
             <small>{b.observed_at ? new Date(b.observed_at).toLocaleString('en-MY', {timeZone: 'Asia/Kuala_Lumpur'}) : 'No observation'}</small>
             {d && can('parking.simulate') && <ParkingAction label={`Simulate bay ${b.label}`} busy={busy} submit={f => save('simulate_parking_bay', {p_device: d.id, p_status: f.get('status')}, 'Simulated bay observation saved')}>
               <label>Simulated bay status<select name="status">{['FREE', 'OCCUPIED', 'UNKNOWN', 'OUT_OF_SERVICE'].map(status => <option key={status}>{status}</option>)}</select></label>
               {!d.active && <p>Device is suspended. Enable it in Administration before sending events.</p>}
             </ParkingAction>}
-          </article>;})}</> : <>
+          </div>;})}</div></> : <>
           {device && can('parking.simulate') && <ParkingAction label="Send sensor event" busy={busy} submit={f => save('simulate_parking', {p_device: device.id, p_occupied: Number(f.get('occupied'))}, 'Simulated observation saved')}>
             <label>Simulated occupied count<input name="occupied" type="number" min="0" max={z.capacity} required/></label>
           </ParkingAction>}

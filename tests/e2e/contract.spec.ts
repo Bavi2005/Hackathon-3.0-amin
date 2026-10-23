@@ -127,7 +127,16 @@ test('UI contract: a forbidden write shows error and no fake success',async({pag
  await expect(page.getByRole('status')).toHaveCount(0);await expect(page.getByRole('link',{name:'Open private guest registration'})).toHaveCount(0);
 });
 for(const role of ['operator','admin','manager','guard','driver','resident'] as Role[])test(`UI contract: ${role} capability controls and authenticated mobile layout`,async({page},testInfo)=>{
- const fixture=await contractFixture(page,role);await fixture.login();await open(page,'MyVisitor');
+ const fixture=await contractFixture(page,role);await fixture.login();
+ if(role==='operator'){
+  await expect(page.getByRole('region',{name:'Operator control centre'})).toBeVisible();
+  await expect(page.getByRole('navigation').getByRole('button',{name:'Platform',exact:true})).toHaveCount(1);
+  await expect(page.getByRole('navigation').getByRole('button',{name:'MyVisitor',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('navigation').getByRole('button',{name:'Transportation',exact:true})).toHaveCount(0);
+  for(const width of [360,768,1440]){await page.setViewportSize({width,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);}
+  await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page.getByRole('button',{name:'Sign in',exact:true})).toBeVisible();return;
+ }
+ await open(page,'MyVisitor');
  await expect(page.getByRole('button',{name:'Create guest invitation'})).toHaveCount(role==='resident'?1:0);
  await expect(page.getByRole('button',{name:'Search records',exact:true})).toHaveCount(['admin','manager','guard'].includes(role)?1:0);
  await expect(page.getByRole('button',{name:'Export masked CSV',exact:true})).toHaveCount(['admin','manager'].includes(role)?1:0);

@@ -34,9 +34,25 @@ export function SiteCheckinIssuer({db, site}: {db: SupabaseClient; site: string}
     } catch (failure) {if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'Site QR unavailable');}
     finally {if (!controller.signal.aborted) setBusy(false);}
   }
-  return <section aria-label="Public site check-in QR"><h2>Displayed site QR</h2><p>Each visitor gets a separate private flow using the current published form. Rotate the displayed QR when required; it expires after 24 hours. Do not display a resident's private invitation as a public QR.</p>
+  async function copyLink() {
+    if (!link) return;
+    try {await navigator.clipboard.writeText(link);setMessage('Walk-in check-in link copied. Share only on the intended site signage.');}
+    catch {setError('Copy failed. Open the link and copy it from the browser address bar.');}
+  }
+  return <section className="qr-issuer" aria-label="Public site check-in QR">
+    <div className="qr-issuer-heading"><div><span className="eyebrow">MYVISITOR / WALK-IN ACCESS</span><h2>Welcome new visitors, in one scan.</h2><p>Generate one displayed site QR for your arrival desk or guard post. Each visitor receives their own private, single-use registration form—no app or account needed.</p></div><div className="qr-issuer-symbol" aria-hidden="true">⌗</div></div>
+    <div className="qr-steps" aria-label="How visitor check-in works"><span><strong>01</strong> Display QR</span><span><strong>02</strong> Guest registers</span><span><strong>03</strong> Guard checks in</span></div>
     {error && <p role="alert" className="error">{error}</p>}{message && <p role="status" className="success">{message}</p>}
-    <button disabled={busy} onClick={() => void change(false)}>Issue or rotate site QR</button>
-    {link && <><img src={qr} alt="Displayed site check-in QR" width="240" height="240"/><p><a href={link}>Open public site check-in</a></p><button className="secondary" disabled={busy} onClick={() => void change(true)}>Revoke site QR</button></>}
+    {!link && <div className="qr-issuer-empty"><span className="qr-placeholder" aria-hidden="true">▦</span><div><strong>Ready for your first arrival?</strong><p>Use your published visitor form. The shared site QR remains valid for 24 hours or until revoked.</p></div></div>}
+    {link && <div className="qr-display" id="visitor-qr-print">
+      <div className="qr-print-sheet"><span className="eyebrow">SMARTTOWNSHIP · MYVISITOR</span><h3>Welcome! Check in here.</h3><img src={qr} alt="Scan this site-specific QR to start your own visitor registration" width="280" height="280"/><p>Scan with your camera to complete the visitor form.</p><strong>NO APP REQUIRED</strong><small>Fictional demo environment · Entry still requires guard verification</small></div>
+      <div className="qr-display-actions"><h3>Display this at the entrance</h3><p>The public QR can be scanned by multiple arriving guests. Each starts a separate private, time-limited registration. Rotating the QR invalidates the previous displayed link, not registrations already started.</p>
+        <a href={link} target="_blank" rel="noreferrer">Test walk-in registration ↗</a>
+        <div className="qr-actions"><button type="button" className="secondary" onClick={() => void copyLink()}>Copy visitor link</button><button type="button" className="secondary" onClick={() => window.print()}>Print QR poster</button></div>
+        <button type="button" className="secondary" disabled={busy} onClick={() => void change(true)}>Revoke public QR</button>
+      </div>
+    </div>}
+    <div className="qr-actions"><button type="button" disabled={busy} onClick={() => void change(false)}>{busy?'Working…':link?'Rotate public QR':'Generate walk-in QR code'}</button></div>
+    <p className="qr-issuer-footnote">Private resident invitations are separate. Never place personal invitation QRs on public signage. This prototype uses fictional registrations and no physical identity verification.</p>
   </section>;
 }

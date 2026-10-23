@@ -50,7 +50,7 @@ export function ParkingPanel({db, site, capabilities, now}: {db: SupabaseClient;
         {availability.source === 'MANUAL OVERRIDE' && <><p>Manual count expires {new Date(z.override!.expires_at).toLocaleString('en-MY', {timeZone: 'Asia/Kuala_Lumpur'})}. Reason: {z.override!.reason.replaceAll('_', ' ')}.</p>
           {can('parking.update.manual') && <button className="secondary" disabled={busy} onClick={() => void save('clear_parking_override', {p_zone: z.id}, 'Manual override cleared; current sensor availability restored')}>Clear manual override</button>}</>}
         {z.kind === 'bay' ? <><p>{z.bays.length}/{z.capacity} bays configured. Unreported or stale bays are unknown.</p>
-          <div className="parking-bays-grid">{z.bays.map(b => {const d = data.devices.find(d => d.bay_id === b.id); return <div className={`parking-bay parking-bay-${currentBayStatus(b,now).toLowerCase()}`} key={b.id}><h3>{b.label}{b.accessible ? ' · ♿' : ''}</h3>
+          <div className="parking-bays-grid">{z.bays.map(b => {const d = data.devices.find(d => d.bay_id === b.id); return <div className={`parking-bay parking-bay-${currentBayStatus(b,now).toLowerCase()}`} key={b.id}><h3>{b.label}{b.accessible ? ' · Accessible' : ''}</h3>
             <p>{currentBayStatus(b, now).replaceAll('_', ' ')}{b.simulated ? ' · SIMULATED' : ''}</p>
             <small>{b.observed_at ? new Date(b.observed_at).toLocaleString('en-MY', {timeZone: 'Asia/Kuala_Lumpur'}) : 'No observation'}</small>
             {d && can('parking.simulate') && <ParkingAction label={`Simulate bay ${b.label}`} busy={busy} submit={f => save('simulate_parking_bay', {p_device: d.id, p_status: f.get('status')}, 'Simulated bay observation saved')}>

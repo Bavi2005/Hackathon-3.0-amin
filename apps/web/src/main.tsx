@@ -52,12 +52,12 @@ function App(){
  const load=useCallback(async()=>{
   if(!db||!site)return;
   const requestContext=context.current;
-  const tables=['sites','stops','visits','rides','vehicles','parking_zones','iot_devices','audit_events','transport_routes'];
+  const tables=m?.role==='PLATFORM_OPERATOR'?['sites']:['sites','stops','visits','rides','vehicles','parking_zones','iot_devices','audit_events','transport_routes'];
   const results=await Promise.all(tables.map(t=>{let q=db.from(t).select('*');q=t==='sites'?q.eq('id',site):q.eq('site_id',site);if(['visits','rides','audit_events'].includes(t))q=q.order('created_at',{ascending:false});return q.limit(100).abortSignal(AbortSignal.timeout(10000));}));
   if(context.current!==requestContext)return;
   const failure=results.find(r=>r.error);if(failure?.error){setData({});setError(failure.error.message);return;}
   setData(Object.fromEntries(tables.map((t,i)=>[t,results[i].data??[]])));
- },[site]);
+ },[site,m?.role]);
  useEffect(()=>{
   if(!db){setReady(true);return;}
   const {data:{subscription}}=db.auth.onAuthStateChange((_e,s)=>{

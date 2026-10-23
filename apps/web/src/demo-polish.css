@@ -219,3 +219,21 @@ html,body,#root{max-width:100%;}
 @media(max-width:860px){.garage-intro,.loading-banner{padding:27px;gap:20px}.garage-facility-grid,.garage-floor-grid,.loading-workflow{grid-template-columns:1fr}.garage-bay-map{grid-template-columns:repeat(4,minmax(0,1fr))}.garage-floor-summary,.loading-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.loading-export{align-items:stretch;flex-direction:column}}
 @media(max-width:560px){.garage-intro,.loading-banner{padding:22px;flex-direction:column;align-items:stretch;border-radius:20px}.garage-intro h2,.loading-banner h2{font-size:33px}.garage-pulse{min-width:0;width:100%;padding:17px}.garage-pulse strong{font-size:56px}.garage-legend{gap:12px}.garage-legend span{font-size:10px}.garage-facility,.garage-floor{padding:20px}.garage-title-row{align-items:start;flex-direction:column;gap:5px}.garage-bay-map{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.garage-bay{min-height:90px}.garage-bay strong{font-size:11px}.garage-bay small{font-size:8px}.garage-zone{padding:17px}.garage-zone header{align-items:start;flex-direction:column;gap:10px}.garage-zone-count{text-align:left}.garage-floor-summary>div,.loading-metrics>div{padding:13px}.loading-form-card,.loading-spaces-card,.loading-history{padding:18px}.loading-banner-emblem{display:none}.loading-export{padding:18px}}
 @media(prefers-reduced-motion:reduce){.garage-facility,.garage-floor,.garage-counter-line span{transition:none}}
+
+
+/* Delivery entrance QR, exported platform pulse and privacy-safe visitor explanation */
+.qr-loading-option{display:flex;align-items:center;justify-content:space-between;gap:28px;background:#fff6f6;border:1px solid #f4cacc;border-radius:20px;padding:22px 25px;margin:20px 0}
+.qr-loading-option>div{flex:1;min-width:0}.qr-loading-option .eyebrow{color:#b72136}.qr-loading-option h3{font-size:23px;color:#4c2a34;letter-spacing:-.04em;margin:11px 0}
+.qr-loading-option p{font-size:12px;color:#8b6570;max-width:580px;line-height:1.7}
+.qr-loading-option a{color:#bf2438;font-size:12px;font-weight:850;text-decoration:underline}
+.qr-loading-option img{flex-shrink:0;width:180px;height:180px;border:9px solid white;border-radius:14px;box-shadow:0 12px 25px #a5353e17}
+.delivery-guest-note{border-left:4px solid #cf3041;background:#fff2f3;color:#752b3b!important;border-radius:11px;padding:15px 18px;font-size:13px!important;line-height:1.7}
+.platform-extra-stats{margin-top:14px}
+.platform-extra-stats article{background:linear-gradient(135deg,#fff,#fff6f7);border-color:#f1dddf}
+.platform-extra-stats .eyebrow{color:#a94a59}.platform-extra-stats article strong{color:#bb2f41}
+.platform-extra-stats .platform-signal-icon{background:#fce2e5;color:#be2940}
+.platform-export-summary{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px;border-radius:20px;border:1px solid #f1d3d8;background:linear-gradient(115deg,#fff,#fff4f5);margin:23px 0}
+.platform-export-summary h3{font-size:21px;margin:8px 0;color:#412b35;letter-spacing:-.035em}
+.platform-export-summary p{font-size:12px;color:#8d737a;line-height:1.6;max-width:530px}
+.platform-export-summary button{background:#c72c40;color:#fff;border:0;border-radius:12px;padding:12px 18px;width:auto;font-size:12px;font-weight:800;flex-shrink:0}
+@media(max-width:650px){.qr-loading-option,.platform-export-summary{flex-direction:column;align-items:flex-start;padding:17px}.qr-loading-option img{width:150px;height:150px}}

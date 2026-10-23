@@ -116,3 +116,12 @@ Final artifact check: setup browser tests passed again (3/3), UI contract browse
 ## Changed files this checkpoint
 
 Frontend main/client types and audit view; Node adapter/imports; strict rejection helper and service tests; browser runner/fixtures/contract tests/hosted selectors; package scripts and existing lockfile verification; lint and Playwright config; CI; README, setup, plan and evidence documents. All existing functionality and protected environment paths were preserved.
+
+
+## 23 October: judge-facing fictional demo pass (main)
+- Added safe fictional sample activity to the connected development Supabase database: 15 visits, 22 ride records, 3 routes, 4 vehicles, 2 parking facilities, 6 zones and 10 bay sensors.
+- Published a fictional visitor form and activated a development-only per-minute parking pulse; inspected successful cron executions. SQL sources committed under scripts/.
+- Promoted new-visitor walk-in QR issuance to MyVisitor with visible poster, print, copy/test and revoke/rotate controls. Underlying token-based RPCs remain unchanged.
+- Added parking digital twin, operator aggregate pulse and a data-backed mobility route network. Explicitly label simulation, freshness and missing ETA.
+- See HACKATHON_SUBMISSION_CHECKLIST.md for unimplemented user-requested features, outstanding hosted verification and slide preparation.
+- No browser-based verification of latest Render deployment or new GitHub Actions run completed from this environment; do not claim launch success.

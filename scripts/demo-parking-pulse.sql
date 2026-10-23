@@ -20,7 +20,7 @@ begin
   update public.parking_zones z
      set occupied = greatest(0,least(z.capacity,
          round(z.capacity * 0.58)::integer
-         + ((tick + ('x' || left(md5(z.id::text),6))::bit(24)::int) % 11)::integer - 5)),
+         + ((tick + get_byte(decode(left(md5(z.id::text),2),'hex'),0)) % 11)::integer - 5)),
          observed_at = clock_timestamp()
     from public.tenants t
    where z.tenant_id = t.id

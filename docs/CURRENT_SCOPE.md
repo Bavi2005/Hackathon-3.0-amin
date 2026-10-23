@@ -1,3 +1,9 @@
+# Redesign scope update — 22/23 October 2026
+
+Red/white super-app UI is implemented: responsive shell, mobile bottom navigation, illustrated home/sign-in, shared module styling and real scoped activity presentation. Local checks pass: 84 unit, 36 runtime, 53 UI contracts, 3 setup, builds/type/lint/HTTP smoke. New demo:pitch source prepares fictional visitors/rides/timetable/parking through authenticated APIs, but its hosted scenario remains unexecuted. See [the detailed redesign and pitch report](REDESIGN_AND_PITCH_REPORT.md).
+
+No database/project or external provider has been configured in this checkpoint. Existing feature and release gaps below still apply; UI completion does not close them.
+
 # Current scope and unresolved work — 2026-10-20
 
 Status: locally tested source, **prototype blocked for hosted qualification and production**. A database-backed feature cannot meet codex.md section 17 until its real database, multi-account and browser paths pass. No live project is configured; user confirmed this explicitly. No deployment or real integrations occurred.

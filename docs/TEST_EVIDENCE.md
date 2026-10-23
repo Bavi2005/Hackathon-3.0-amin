@@ -1,3 +1,24 @@
+# Redesign verification — 22 October 2026
+
+Latest complete run: npm run verify:local -- --audit-unavailable, timestamp 2026-10-22T15:46:28.597Z, Windows / Node v25.5.0 / installed Edge. Machine record: ignored .local/verification-results.json. Exit 1 is expected for open external gates: **9 command groups passed, 3 blocked**.
+
+| Executed check | Result |
+|---|---|
+| Backend build and actual child-process HTTP smoke | PASS; liveness 200, unconfigured readiness 503. |
+| Native runtime/security/configuration | PASS, 36 tests including 5 pitch guards. |
+| TypeScript, ESLint, frontend production build | PASS. |
+| Vitest | PASS, 84 tests. |
+| Edge production setup | PASS, 3 tests. |
+| Edge UI contracts | PASS, 53 tests; synthetic service responses, not hosted SQL/Auth proof. |
+| SQL integration and real Supabase workflow runners | BLOCKED at configuration guards, before database execution. |
+| Live dependency audit | Explicitly marked unavailable by flag; not retried or passed. |
+| npm run demo:pitch | Exit 1 at required development configuration guard, before network/mutations; hosted scenario UNVERIFIED. |
+| Final visual inspection | Desktop home/login and phone home/parking inspected; reviewed fictional images in docs/screenshots. |
+
+New browser cases verify service shortcuts and displayed activity, home overflow at 1440/768/390/360, mobile More navigation and role visibility, login and honest empty activity. Existing 50 contracts remain passing. First run 52/53 failed because an export-cancellation test expected the old Parking heading; changed it to the existing Parking availability region and reran all 53 successfully. Typography was adjusted after initial screenshot review.
+
+No hosted migrations, seed, provider calls or deployment performed. **16 migrations / 300 authored SQL assertions remain unexecuted.** Current Node differs from the Node 22.18+ target. Screenshots use fictional test fixtures and do not establish live Realtime, authenticated persistence or availability. Earlier evidence below is historical.
+
 ﻿# Test evidence — 2026-10-20
 
 ## Final local run for repository publication

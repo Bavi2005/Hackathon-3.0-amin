@@ -1,3 +1,17 @@
+# UI redesign and pitch checkpoint — 22/23 October 2026
+
+- [x] Inspect existing application/specification and preserve scoped workflows.
+- [x] Implement red/white shell, original illustration, home, sign-in and shared module styles.
+- [x] Add responsive/mobile navigation and empty-data contracts; inspect final screenshots.
+- [x] Pass local build/type/lint/HTTP smoke, 84 unit, 36 runtime, 53 browser contract and 3 setup tests.
+- [x] Implement guarded additive fictional pitch preparation through real authenticated APIs; document scenario and partial-failure handling.
+- [x] Write detailed REDESIGN_AND_PITCH_REPORT.md with feature matrix, evidence, sample-data instructions, pitch sequence and open gates.
+- [ ] Configure dedicated hosted Supabase; execute 16 migrations and 300 authored SQL assertions, real service/browser/Realtime/concurrency checks.
+- [ ] Execute and rehearse the new pitch seed on that verified development project.
+- [ ] Close remaining functional, dependency, target-runtime, security/privacy, load/restore and deployment gates in CURRENT_SCOPE.md and PRODUCTION_CHECKLIST.md.
+
+Git push is authorized by the user; source publication is separate from infrastructure deployment. Final delivery records the publication outcome. Preserve AppointHub's 5173/5000; SmartTownship uses strict 5174. Historical implementation checkpoints follow.
+
 # Current acceptance plan — 2026-10-20
 
 The full-scope request has produced the source slices listed in CURRENT_SCOPE.md. Treat the older plans below as historical checkpoints. No phase whose gate requires hosted evidence is complete yet.

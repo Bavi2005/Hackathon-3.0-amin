@@ -1,3 +1,15 @@
+# Red-and-white redesign checkpoint — 22/23 October 2026
+
+UI redesign and local checks are complete; hosted/product release gates remain open. This checkpoint supersedes historical status/counts below, including old statements that Git metadata is unavailable. The base source was published by the user as bb3bc8d; the redesign's actual publication result is recorded in the delivery message.
+
+Changed: new AppShell, HomeDashboard, Welcome, Icon and original TownScene SVG components; shared superapp.css and main.tsx integration; new responsive/mobile navigation contracts; guarded scripts/seed-pitch.mjs with five configuration/target tests; package script and Playwright match updates. Existing scoped workflows remain connected. Added REDESIGN_AND_PITCH_REPORT.md and fictional screenshot evidence; updated setup/scope/plan/release documents.
+
+Final serial verify:local run at 2026-10-22T15:46:28.597Z: 84 unit, 36 runtime, 53 browser contract and 3 setup tests pass; builds, TypeScript, lint and actual backend HTTP smoke pass. Aggregate exit 1: nine groups pass, SQL/services/audit remain blocked. Initial redesign browser run was 52/53 due an obsolete heading assertion; final full run passes. Final desktop home/login and phone home/parking screenshots were visually inspected after readability adjustments.
+
+The pitch command prepares fictional visitors, trips, a timetable and parking through authenticated RPCs, with project/demo checks and an exclusive per-site receipt. Its missing-config guard was exercised; no hosted scenario was run or claimed. No schema/security relaxation, provider connection, deployment, real data collection or AppointHub change occurred. Browser work stayed on strict 5174.
+
+Next: configure dedicated Supabase using SETUP_HOSTED.md, execute all 16 migrations/300 authored SQL assertions and real service/browser tests, then run and rehearse demo:pitch. Full gaps and pitch instructions are in REDESIGN_AND_PITCH_REPORT.md. This is a locally tested prototype, not a fully completed product.
+
 # Current checkpoint — full-scope continuation, 2026-10-20
 
 **Not fully finished.** User confirmed hosted Supabase is not configured and requested exact setup assistance. The canonical Windows guide is SETUP_HOSTED.md. Current source and functional gaps are explicitly listed in CURRENT_SCOPE.md; older checkpoints below are historical.

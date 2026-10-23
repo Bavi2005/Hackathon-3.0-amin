@@ -4,6 +4,14 @@ Visitor registration, transport operations and parking share Supabase identity a
 
 Start with the Windows [setup guide](docs/SETUP_HOSTED.md). SmartTownship uses **http://127.0.0.1:5174**, strict port. Leave **5173 and 5000** for AppointHub. Core workflows need hosted Supabase; the optional device bridge uses 3001 and is not required for the demo.
 
+## Red-and-white UI redesign
+
+The responsive super-app redesign is implemented and locally tested. See the [detailed redesign, working/not-working and pitch readiness report](docs/REDESIGN_AND_PITCH_REPORT.md) for screenshots, all module statuses, sample-data instructions and remaining gates.
+
+![Redesigned desktop home — synthetic browser test data, not hosted availability](docs/screenshots/redesign-home-desktop.png)
+
+Current local checks: **84 unit, 36 runtime, 53 browser contract and 3 setup tests pass**, alongside build/typecheck/lint/HTTP smoke. Hosted database/service verification and the live dependency audit remain blocked. After hosted setup and acceptance pass, the new `npm run demo:pitch` adds fictional visitors, trips, a timetable and parking through real authenticated APIs; it has not yet run against a database.
+
 ## Local checks
 
 Dependencies and lockfile are present. Use npm ci for a clean checkout. Node 22.18+ is the target; this workspace's checks used Node 25.5.0, so target-runtime qualification remains pending.

@@ -203,7 +203,7 @@ test('UI contract: leaving visitor records cancels an export before any download
  await records.getByRole('button',{name:'Export masked CSV',exact:true}).click();
  await expect.poll(()=>fixture.calls.filter(c=>c.name==='export_visitor_records').length).toBe(1);
  await page.getByRole('navigation').getByRole('button',{name:'Parking',exact:true}).click();release();
- await expect(records).toHaveCount(0);await expect(page.getByRole('heading',{name:'Parking',exact:true})).toBeVisible();expect(downloads).toBe(0);
+  await expect(records).toHaveCount(0);await expect(page.getByRole('region',{name:'Parking availability',exact:true})).toBeVisible();expect(downloads).toBe(0);
 });
 
 test('UI contract: manager publishes controlled form versions and can reopen history',async({page},testInfo)=>{

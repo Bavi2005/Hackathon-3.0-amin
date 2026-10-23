@@ -1,6 +1,6 @@
 # Hosted Supabase setup — no local Docker
 
-## Current setup order — 2026-10-20
+## Current setup order — 22/23 October 2026
 
 The user confirmed no development project is configured yet. Create a **separate SmartTownship development project**, leaving AppointHub's database and ports alone. Use **http://127.0.0.1:5174** for Auth Site URL and allowed redirect; keep Email/password enabled and disable public signups. The trusted seed creates confirmed fictional accounts. Keep the Data API's public schema enabled; do not expose private.
 
@@ -32,9 +32,17 @@ npm.cmd run dev
 
 Open **http://127.0.0.1:5174** and use the generated account email plus the DEMO_PASSWORD you entered (at least 16 characters). Start with admin, resident, guard, driver, dispatcher or parking for the matching workflow. The first operator has explicit platform metadata permission. Do not share keys/passwords in chat. Keep **5173 and 5000** for AppointHub. Existing agent processes do not inherit secrets set in another terminal; run hosted commands in the terminal where you entered them.
 
-Current local verification: **84 unit, 31 native runtime, 50 browser contract and 3 setup tests pass**, with lint/typecheck/build and HTTP smoke. The aggregate verification still exits 1 because database, real service and live audit gates are blocked. Browser contract fixtures are not hosted proof. See CURRENT_SCOPE.md for functionality still pending and TEST_EVIDENCE.md for evidence. Older numerical checkpoints in this guide are superseded by this section.
+Current local verification: **84 unit, 36 native runtime, 53 browser contract and 3 setup tests pass**, with lint/typecheck/build and HTTP smoke. The aggregate verification still exits 1 because database, real service and live audit gates are blocked. Browser contract fixtures are not hosted proof. See CURRENT_SCOPE.md for functionality still pending and TEST_EVIDENCE.md for evidence. Older numerical checkpoints in this guide are superseded by this section.
 
 Status on 2026-10-20: dependencies/lockfile, frontend/backend builds, TypeScript, lint, 63 Vitest tests, 28 native tests and 25 Edge UI contract tests pass locally; earlier 3 Edge setup tests also passed. Browser tests use port 5174 and synthetic responses; hosted database/account/Realtime workflows remain unverified. No cloud project or deployment was created. Use a dedicated development/demo project with fictional data only.
+
+## Optional fictional pitch story after hosted acceptance
+
+Once migrations, SQL tests, the one-time base seed, real service tests and hosted browser tests have passed, run `npm.cmd run demo:pitch` in the same configured terminal. Keep APP_ENV=test, DEMO_SEED_ACK=fictional-data-only and DEMO_MODE=true; demo:configure must also have enabled the database simulation setting. The script checks the project and demo tenant and adds three visitor states, a completed and a pending ride, a timetable and four simulated bays through real RPCs.
+
+This new scenario has **not been executed against Supabase yet**. Its environment/target guards have local test coverage. It refuses active assigned/boarded trips or an active demo driver shift and stores an exclusive per-site receipt under .local. Do not rerun the base seed or remove the receipt blindly; a failed sequence can leave partial fictional records. Review completed steps and resolve open demo work first. Refresh simulated parking observations before the pitch; they expire after 120 seconds.
+
+See [REDESIGN_AND_PITCH_REPORT.md](REDESIGN_AND_PITCH_REPORT.md) for the complete data inventory, preparation sequence, feature matrix and seven-minute demonstration.
 
 ## 1. Install dependencies in normal Windows PowerShell
 
@@ -60,7 +68,7 @@ $env:PLAYWRIGHT_CHANNEL = 'msedge'
 npm.cmd run test:e2e:setup
 ```
 
-This passes three browser setup/layout tests at 360, 768 and 1440 pixels without Supabase credentials. `npm.cmd run test:e2e:contract` additionally passes 25 UI contract tests with explicit synthetic HTTP responses; those do not prove hosted Auth/RLS or tenant isolation. Both modes use strict port 5174, compile the production frontend into isolated `.local/browser-dist` paths and leave `apps/web/dist` unchanged. For bundled Chromium instead: `npx.cmd playwright install chromium`, then remove PLAYWRIGHT_CHANNEL from the process environment.
+This passes three browser setup/layout tests at 360, 768 and 1440 pixels without Supabase credentials. `npm.cmd run test:e2e:contract` additionally passes 53 UI contract tests with explicit synthetic HTTP responses; those do not prove hosted Auth/RLS or tenant isolation. Both modes use strict port 5174, compile the production frontend into isolated `.local/browser-dist` paths and leave `apps/web/dist` unchanged. For bundled Chromium instead: `npx.cmd playwright install chromium`, then remove PLAYWRIGHT_CHANNEL from the process environment.
 
 ## 2. Create/configure the development Supabase project
 
@@ -108,6 +116,7 @@ function Set-SessionSecret([string]$Name) {
     [Environment]::SetEnvironmentVariable($Name, $plainValue, 'Process')
 }
 $env:APP_ENV = 'test'
+$env:DEMO_MODE = 'true'
 $env:DEMO_SEED_ACK = 'fictional-data-only'
 $env:SUPABASE_URL = Read-Host 'Supabase project URL'
 $env:SUPABASE_PUBLISHABLE_KEY = Read-Host 'Supabase public publishable/anon key'
@@ -127,15 +136,16 @@ These variables exist only in that terminal and its children. An already running
 
 ```powershell
 npm.cmd run db:migrate
+npm.cmd run demo:configure
 npm.cmd run test:integration
 npm.cmd run db:seed:demo
 npm.cmd run test:services
 npm.cmd run test:e2e
 ```
 
-`db:migrate` uses pg over verified TLS, an advisory lock, an RLS-protected private migration ledger and hashes. It applies the seven migration files transactionally, records versions, rejects edited applied migrations and performs no reset/drop. It is intended for this dedicated development project. If migrations were already installed manually/by CLI, do not blindly reapply or fabricate ledger entries; reconcile migration history first. Migration 006 adds masked search/export and audit metadata; 007 adds immutable form versions and retained answer storage. Neither changes existing membership grants.
+`db:migrate` uses pg over verified TLS, an advisory lock, an RLS-protected private migration ledger and hashes. It applies the 16 migration files transactionally, records versions, rejects edited applied migrations and performs no reset/drop. It is intended for this dedicated development project. If migrations were already installed manually/by CLI, do not blindly reapply or fabricate ledger entries; reconcile migration history first. Migration 006 adds masked search/export and audit metadata; 007 adds immutable form versions and retained answer storage. Neither changes existing membership grants.
 
-`test:integration` connects to hosted PostgreSQL directly, executes the 136 authored pgTAP assertions and rejects failing, skipped or mismatched plans. Each test's fictional fixture transaction rolls back. A dedicated development DB admin connection is required because role/tenant isolation tests create fixtures and SET ROLE. None of these assertions has run in this workspace yet.
+`test:integration` connects to hosted PostgreSQL directly, executes the 300 authored pgTAP assertions and rejects failing, skipped or mismatched plans. Each test's fictional fixture transaction rolls back. A dedicated development DB admin connection is required because role/tenant isolation tests create fixtures and SET ROLE. None of these assertions has run in this workspace yet.
 
 `db:seed:demo` is additive: creates two fictional tenants, separate accounts and minimal assets. It saves only fictional IDs/emails to ignored `.local/demo-fixture.json`, no passwords/keys/tokens. Repeat seed runs create additional data; no destructive reset exists.
 

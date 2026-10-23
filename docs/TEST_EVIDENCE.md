@@ -147,3 +147,12 @@ Five migrations have not been applied. The three pgTAP suites contain **47 autho
 Needed: dedicated development SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, server-only SUPABASE_SERVICE_ROLE_KEY, password-bearing session-pooler SUPABASE_DB_URL on 5432, DEMO_PASSWORD >=16, APP_ENV=test and DEMO_SEED_ACK=fictional-data-only; optional official CA if trust requires it. No secret values should be shared in chat. See SETUP_HOSTED.md secure prompts. Existing agent processes do not inherit variables from a separate normal terminal.
 
 Still unverified: real Auth/session revocation/MFA, all-table/Storage RLS matrix, hosted multi-user/browser/Realtime/reconnect/Render-down operation, applied migrations/retention, live dependency audit, Node 22 run, actual Pages/Render/TLS/CSP deployment, provider integrations, load/restore drills and responsible privacy/security/pilot approval. Passing local contracts do not certify production readiness.
+
+
+## 23 October: current demo build verification status
+- Connected Supabase development project checked as ACTIVE_HEALTHY; Demo Elmina test tenant exists.
+- After the additive sample writes, counted **15 visits, 22 rides, 3 routes, 2 parking facilities, 6 zones, 10 bays, 15 devices and 4 vehicles** on the fictional main site.
+- Confirmed published test guest form version 1 and default fields purpose / party size / safety acknowledgement.
+- Invoked the test parking tick and observed 15 affected records. Verified scheduled job 2 had successive succeeded runs at 03:11–03:13 UTC on 2026-10-23. This is backend data evidence, not evidence that the Render interface updated.
+- Inspected GitHub Actions run 39892956987 for old SHA ae865985: lint, typecheck, tests, build, API smoke and browser setup passed, but UI browser contract test suite had **52 passed, 1 failed** because home page document width exceeded viewport at one of 1440/768/390/360. Responsive containment was subsequently added, but a new full CI success on the final commit is **not verified**.
+- Live Render URL could not be fetched/visually inspected in this workspace. No successful real account login, deployed QR/parking test, SMS or physical IoT claim. CI, hosted SQL assertions, end-to-end role testing, deployment status and security audit remain required before submitting a feature as verified.

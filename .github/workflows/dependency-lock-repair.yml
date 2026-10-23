@@ -16,7 +16,7 @@ jobs:
           node-version: 22
       - name: Pin patched build and test dependencies
         run: |
-          npm pkg set devDependencies.vite=7.3.7 devDependencies.vitest=3.2.7 devDependencies.typescript-eslint=8.72.0
+          npm pkg set devDependencies.vite=7.3.7 devDependencies.vitest=5.0.5 devDependencies.typescript-eslint=8.72.0
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Validate synchronized clean dependency install
         run: npm ci
